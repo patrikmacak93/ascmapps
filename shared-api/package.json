@@ -1,0 +1,17 @@
+{
+  "name": "ascm-shared-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sdílené firemní API - appky mu posílají SQL dotaz (text) + parametry, ono ho bezpečně spustí v databázi a vrátí výsledek. Appky si SQL text drží ve vlastních souborech (viz README.md).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "mssql": "^12.6.0",
+    "msnodesqlv8": "^5.2.1"
+  }
+}
