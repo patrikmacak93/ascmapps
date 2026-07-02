@@ -1,0 +1,42 @@
+/* =========================
+   ZÁLOŽKA "EMPTIES"
+========================= */
+
+.empties-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.empties-tools .btn-primary {
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.empties-tools .status {
+  font-size: 12px;
+}
+
+.editable-cell { cursor: pointer; background: #fff; }
+.editable-cell:hover { background: #f4fbf5; }
+
+.edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+  background: #fff;
+  text-align: center;
+  outline: none;
+}
+
+.empty-row td {
+  height: auto;
+  line-height: normal;
+  vertical-align: top;
+}

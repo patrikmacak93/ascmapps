@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PckPoolBalance Dashboard</title>
+<link rel="stylesheet" href="css/common.css" />
+<link rel="stylesheet" href="css/grafy.css" />
+<link rel="stylesheet" href="css/empties.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="app-shell">
+    <div class="header">
+      <div class="title-row">
+        <div class="title-block">
+          <h1>📊 Packaging pool management Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <button id="loadBtn" class="btn-primary">Načíst data</button>
+          <span id="status" class="status">Data nejsou načtena.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="chartsTab">Grafy</button>
+        <button class="tab-btn" data-tab="weeklyTableTab">Týdenní přehled</button>
+        <button class="tab-btn" data-tab="yearlyTableTab">Roční přehled</button>
+        <button class="tab-btn" data-tab="emptiesTab">Empties</button>
+      </div>
+
+      <div id="chartsTab" class="tab-content active">
+        <div class="chart-box">
+          <h3>Pareto: Top SAP ID podle RequiredPackagingQty + Nakoupeno (linka)</h3>
+          <div class="chart-toolbar">
+            <label class="small-note"><b>Období:</b></label>
+            <select id="paretoPeriodSelect" class="select"></select>
+
+            <label class="small-note"><b>Top N:</b></label>
+            <select id="paretoTopNSelect" class="select">
+              <option value="10">10</option>
+              <option value="15" selected>15</option>
+              <option value="20">20</option>
+            </select>
+
+            <button id="paretoApplyBtn" class="btn-primary" type="button">Aktualizovat</button>
+            <span id="paretoStatus" class="status">Graf není načten.</span>
+          </div>
+          <div class="chart-wrapper"><canvas id="paretoChart"></canvas></div>
+        </div>
+      </div>
+
+      <div id="weeklyTableTab" class="tab-content">
+        <div class="panel">
+          <h3>Týdenní přehled</h3>
+          <div class="table-toolbar inline-toolbar">
+            <span class="toolbar-label">Zobrazení hierarchie:</span>
+            <button class="table-action-btn" data-collapse-table="weeklyTable" data-collapse-mode="sap">Obal</button>
+            <button class="table-action-btn" data-collapse-table="weeklyTable" data-collapse-mode="project">Projekt</button>
+            <button class="table-action-btn" data-collapse-table="weeklyTable" data-collapse-mode="material">Materiál</button>
+
+            <span class="toolbar-separator"></span>
+
+            <span class="toolbar-label">Potřeby:</span>
+            <label class="inline-check">
+              <input type="checkbox" id="weeklyNeedsMaterialToggle" />
+              Potřeby - materiál
+            </label>
+            <label class="inline-check">
+              <input type="checkbox" id="weeklyNeedsPackagingToggle" />
+              Potřeby - obaly
+            </label>
+          </div>
+
+          <div class="table-wrapper">
+            <table id="weeklyTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="yearlyTableTab" class="tab-content">
+        <div class="panel">
+          <h3>Roční přehled</h3>
+          <div class="table-toolbar inline-toolbar">
+            <span class="toolbar-label">Zobrazení hierarchie:</span>
+            <button class="table-action-btn" data-collapse-table="yearlyTable" data-collapse-mode="sap">Obal</button>
+            <button class="table-action-btn" data-collapse-table="yearlyTable" data-collapse-mode="project">Projekt</button>
+            <button class="table-action-btn" data-collapse-table="yearlyTable" data-collapse-mode="material">Materiál</button>
+
+            <span class="toolbar-separator"></span>
+
+            <span class="toolbar-label">Potřeby:</span>
+            <label class="inline-check">
+              <input type="checkbox" id="yearlyNeedsMaterialToggle" />
+              Potřeby - materiál
+            </label>
+            <label class="inline-check">
+              <input type="checkbox" id="yearlyNeedsPackagingToggle" />
+              Potřeby - obaly
+            </label>
+          </div>
+
+          <div class="table-wrapper">
+            <table id="yearlyTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="emptiesTab" class="tab-content">
+        <div class="panel">
+          <h3>Empties</h3>
+          <div class="empties-tools">
+            <button class="btn-primary" id="loadEmptiesBtn">Načíst Empties</button>
+            <button class="btn-primary" id="addEmptiesBtn">Přidat řádek</button>
+            <span class="status" id="emptiesStatus">Tabulka Empties není načtena.</span>
+          </div>
+          <div class="table-wrapper">
+            <table id="emptiesTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

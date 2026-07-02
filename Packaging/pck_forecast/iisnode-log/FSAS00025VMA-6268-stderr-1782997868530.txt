@@ -1,0 +1,6 @@
+(node:6268) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+CHYBA /api/weekly-overview: Chyba při spuštění SQL dotazu. - [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified
+CHYBA /api/pckpoolbalance: Chyba při spuštění SQL dotazu. - [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified
+CHYBA /api/yearly-overview: Chyba při spuštění SQL dotazu. - [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified
+CHYBA /api/empties: Chyba při spuštění SQL dotazu. - [Microsoft][ODBC Driver Manager] Data source name not found and no default driver specified

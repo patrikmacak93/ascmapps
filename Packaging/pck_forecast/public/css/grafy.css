@@ -1,0 +1,28 @@
+/* =========================
+   ZÁLOŽKA "GRAFY" (Pareto graf)
+========================= */
+
+.chart-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 12px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-wrapper {
+  position: relative;
+  min-height: 420px;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+.chart-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 6px 0 10px;
+}
