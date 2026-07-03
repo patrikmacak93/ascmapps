@@ -1,78 +1,57 @@
 // db.js
-// Vytváří a spravuje připojení k SQL databázi přes Windows (NTLM) autentizaci.
-// Ostatní soubory (endpointy, testy) si odtud berou sdílený connection pool.
+// Vytváří a spravuje připojení k SQL databázi přes Windows Trusted
+// Connection (ODBC/SSPI) — STEJNÝ princip jako shared-api appka,
+// která už na tomhle serveru funguje.
+//
+// POZOR: narazili jsme na to, že explicitní NTLM (tedious/mssql
+// s authentication.type='ntlm') je na tomto SQL Serveru/doméně
+// blokované bezpečnostní politikou (NTLM Restrict). IIS appky
+// (jako shared-api) fungují, protože automaticky vyjednávají
+// Kerberos přes Windows SSPI rozhraní — msnodesqlv8 dělá totéž.
+//
+// DŮSLEDEK: tenhle connector MUSÍ běžet pod identitou servisního
+// účtu (ne s explicitním username/password v configu) — v NSSM
+// nastav "Log on as" na VT1\fsv31315 (to už máme), a Trusted_Connection
+// v connection stringu použije přímo identitu procesu.
 
-// Načte soubor .env a jeho obsah vloží do process.env.
-// MUSÍ být na úplně prvním řádku — jinak by proměnné jako DB_SERVER
-// nebyly ještě dostupné, když je kód níže potřebuje.
 require('dotenv').config();
 
-// Načte knihovnu mssql, která umí mluvit se SQL Serverem
-// (pod kapotou používá tedious). Modul "sql" exportujeme na konci,
-// aby ho mohly používat i další soubory (např. při psaní dotazů).
-const sql = require('mssql');
-const logger = require('./utils/logger');
+// POZOR: jiný require než dřív — msnodesqlv8 varianta mssql knihovny.
+const sql = require('mssql/msnodesqlv8');
 
-const config = {
-  // Název SQL serveru. U named instance (server\instance) jde
-  // celý řetězec včetně zpětného lomítka.
-  server: process.env.DB_SERVER,
-
-  // Konkrétní databáze, ke které se připojujeme.
-  database: process.env.DB_DATABASE,
-
-  // Tohle je JAK se ověříme (autentizace).
-  authentication: {
-    // 'ntlm' = použij Windows autentizaci přes NTLM protokol
-    // místo klasického SQL loginu (uživatel/heslo přímo v DB).
-    type: 'ntlm',
-    options: {
-      // POZOR: klíče musí být přesně domain / userName / password —
-      // to je pevně daný tvar, který očekává knihovna tedious pod mssql.
-      // (Tady jsme dřív měli bug: překlep DBPASSWORD místo DB_PASSWORD.)
-      domain: process.env.DB_DOMAIN,
-      userName: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-    },
-  },
-
-  // Tohle je DRUHÝ, jiný "options" objekt — netýká se autentizace,
-  // ale obecného chování spojení. Snadno se plete s authentication.options.
-  options: {
-    // Zapne šifrování TDS provozu mezi connectorem a databází.
-    encrypt: true,
-    // true = nekontroluj platnost SSL certifikátu serveru.
-    // OK pro vývoj/interní síť; v produkci s platným certifikátem dej false.
-    trustServerCertificate: true,
-  },
-
-  // Nastavení connection poolu — místo otevírání nového spojení
-  // pro každý požadavek (pomalé, drahé) mssql udržuje sadu
-  // otevřených spojení a půjčuje je.
+// ODBC connection string — stejný formát jako shared-api.
+// Trusted_Connection=Yes = použij identitu procesu (Windows SSPI),
+// žádné username/password se sem nepíše.
+const dbConfig = {
+  connectionString:
+    `Driver={ODBC Driver 17 for SQL Server};` +
+    `Server=${process.env.DB_SERVER};` +
+    `Database=${process.env.DB_DATABASE};` +
+    `Trusted_Connection=Yes;` +
+    `TrustServerCertificate=Yes;`,
   pool: {
-    max: 10,               // nejvíc 10 současných spojení
-    min: 0,                // klidně žádné, když nic neběží
-    idleTimeoutMillis: 30000, // nečinné spojení se zavře po 30 s
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000,
+  },
+  options: {
+    trustServerCertificate: true,
   },
 };
 
-// Tady se pool skutečně VYTVOŘÍ a PŘIPOJÍ — hned při startu aplikace,
-// ne až při prvním požadavku.
-// poolPromise je Promise: buď se vyřeší na pool objekt (úspěch),
-// nebo skončí chybou, kterou zalogujeme a znovu vyhodíme (throw err),
-// aby si ji mohl odchytit i kód, který db.js importuje jinde.
-const poolPromise = new sql.ConnectionPool(config)
-  .connect()
+// DŮLEŽITÉ (viz shared-api historie): sql.connect() musí dostat OBJEKT
+// s vlastností connectionString, ne holý text — jinak ODBC Driver
+// Manager neví, jaký ovladač použít.
+const poolPromise = sql
+  .connect(dbConfig)
   .then(pool => {
-    logger.info('Připojeno k SQL databázi');
+    console.log('Připojeno k SQL databázi (Trusted Connection / msnodesqlv8)');
     return pool;
   })
   .catch(err => {
-    logger.error('Chyba připojení k DB', { message: err.message, stack: err.stack });
+    console.error('Chyba připojení k DB:', err);
     throw err;
   });
 
-// Zpřístupní sql (knihovnu) a poolPromise (připojení) ostatním
-// souborům přes require('./db').
 module.exports = { sql, poolPromise };
 
