@@ -3,6 +3,7 @@ node_modules/
 .env.local
 .env.*.local
 .log
+logs/
 npm-debug.log
 .DS_Store
 Thumbs.debug
