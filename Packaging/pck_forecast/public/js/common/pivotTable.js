@@ -376,20 +376,20 @@ export function renderPivotTable(tableId, periods, rows) {
 
       if (!cellKey || !Number.isFinite(colIndex) || !rowKey) return;
 
-      const state = selectionState[tableId];
+      const selstate = selectionState[tableId];
       const alreadySelected =
-        state.cellKey === cellKey &&
-        state.rowKey === rowKey &&
-        state.colIndex === colIndex;
+        selstate.cellKey === cellKey &&
+        selstate.rowKey === rowKey &&
+        selstate.colIndex === colIndex;
 
       if (alreadySelected) {
-        state.rowKey = null;
-        state.colIndex = null;
-        state.cellKey = null;
+        selstate.rowKey = null;
+        selstate.colIndex = null;
+        selstate.cellKey = null;
       } else {
-        state.rowKey = rowKey;
-        state.colIndex = colIndex;
-        state.cellKey = cellKey;
+        selstate.rowKey = rowKey;
+        selstate.colIndex = colIndex;
+        selstate.cellKey = cellKey;
       }
 
       renderPivotTableById(tableId);

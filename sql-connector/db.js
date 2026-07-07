@@ -1,12 +1,10 @@
 // db.js
 // Vytváří a spravuje připojení k SQL databázi přes Windows Trusted
-// Connection (ODBC/SSPI) — STEJNÝ princip jako shared-api appka,
-// která už na tomhle serveru funguje.
+// Connection (ODBC/SSPI)
 //
 // POZOR: narazili jsme na to, že explicitní NTLM (tedious/mssql
 // s authentication.type='ntlm') je na tomto SQL Serveru/doméně
-// blokované bezpečnostní politikou (NTLM Restrict). IIS appky
-// (jako shared-api) fungují, protože automaticky vyjednávají
+// blokované bezpečnostní politikou (NTLM Restrict). IIS appky fungují, protože automaticky vyjednávají
 // Kerberos přes Windows SSPI rozhraní — msnodesqlv8 dělá totéž.
 //
 // DŮSLEDEK: tenhle connector MUSÍ běžet pod identitou servisního

@@ -1,1 +1,0 @@
-Sdílené SQL API běží na http://localhost:\\.\pipe\839c9714-d712-49d7-867b-a6746c5660b3

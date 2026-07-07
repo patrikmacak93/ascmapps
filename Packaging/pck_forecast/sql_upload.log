@@ -1,14 +1,14 @@
-2026-07-02 15:17:49 | EXCEL_READ | rows=12012 | cols=['local_material', 'period_type', 'period_label', 'requirement_qty']
-2026-07-02 15:17:49 | CLEANING_DONE
-2026-07-02 15:17:50 | SQL_DELETE | table=pckForecast.APR | deleted_rowcount=12012
-2026-07-02 15:17:50 | SQL_INSERT | table=pckForecast.APR | inserted_rows=12012
-2026-07-02 15:17:50 | SQL_VERIFY | table=pckForecast.APR | count_after=12012
-2026-07-02 15:17:50 | SUCCESS
-2026-07-02 15:29:19 | START | user=fsv31315 | excel=\\vt1.vitesco.com\fst1\did80051\01_Public\02_PS_SCM_packaging\APR.xlsx | sheet=Query1 | server=FSDB0005\I0176 | db=FSTASCM | target=pckForecast.APR
-2026-07-02 15:29:19 | CONNECTED | login=VT1\fsv31315 | db=FSTASCM | @@servername=FSDB0005\I0176
-2026-07-02 15:29:20 | EXCEL_READ | rows=12012 | cols=['local_material', 'period_type', 'period_label', 'requirement_qty']
-2026-07-02 15:29:20 | CLEANING_DONE
-2026-07-02 15:29:20 | SQL_DELETE | table=pckForecast.APR | deleted_rowcount=12012
-2026-07-02 15:29:20 | SQL_INSERT | table=pckForecast.APR | inserted_rows=12012
-2026-07-02 15:29:20 | SQL_VERIFY | table=pckForecast.APR | count_after=12012
-2026-07-02 15:29:20 | SUCCESS
+2026-07-07 09:28:47 | EXCEL_READ | rows=12012 | cols=['local_material', 'period_type', 'period_label', 'requirement_qty']
+2026-07-07 09:28:48 | CLEANING_DONE
+2026-07-07 09:28:48 | SQL_DELETE | table=pckForecast.APR | deleted_rowcount=12012
+2026-07-07 09:28:50 | SQL_INSERT | table=pckForecast.APR | inserted_rows=12012
+2026-07-07 09:28:50 | SQL_VERIFY | table=pckForecast.APR | count_after=12012
+2026-07-07 09:28:50 | SUCCESS
+2026-07-07 10:30:33 | START | user=fsv31315 | excel=\\vt1.vitesco.com\fst1\did80051\01_Public\02_PS_SCM_packaging\APR.xlsx | sheet=Query1 | server=FSDB0005\I0176 | db=FSTASCM | target=pckForecast.APR
+2026-07-07 10:30:35 | CONNECTED | login=VT1\fsv31315 | db=FSTASCM | @@servername=FSDB0005\I0176
+2026-07-07 10:30:36 | EXCEL_READ | rows=12012 | cols=['local_material', 'period_type', 'period_label', 'requirement_qty']
+2026-07-07 10:30:36 | CLEANING_DONE
+2026-07-07 10:30:36 | SQL_DELETE | table=pckForecast.APR | deleted_rowcount=12012
+2026-07-07 10:30:36 | SQL_INSERT | table=pckForecast.APR | inserted_rows=12012
+2026-07-07 10:30:36 | SQL_VERIFY | table=pckForecast.APR | count_after=12012
+2026-07-07 10:30:36 | SUCCESS

@@ -23,8 +23,7 @@ function errorHandler(err, req, res, next) {
   });
 
   // Klientovi NIKDY neposíláme err.message nebo err.stack — mohly by
-  // prozradit strukturu databáze, cesty na serveru apod. Stejný princip,
-  // jaký jsme používali v controllerech od začátku.
+  // prozradit strukturu databáze, cesty na serveru apod
   res.status(500).json({ error: 'Interní chyba serveru' });
 }
 

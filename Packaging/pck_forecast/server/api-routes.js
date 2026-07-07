@@ -28,8 +28,7 @@ const path = require("path");
 const { execFile } = require("child_process");
 
 const nastaveni = require("./nastaveni");
-const dotazy = require("./sql-dotazy");
-const { spustitDotaz } = require("./shared-api-klient");
+const {volatConnector} = require('./sql_connector-klient')
 const {
   cacheGet,
   cacheSet,
@@ -37,6 +36,7 @@ const {
   odeslatJsonSEtag,
   sestavitPivotTabulku
 } = require("./pomocne-funkce");
+const { convertProcessSignalToExitCode } = require("util");
 
 const router = express.Router();
 const CACHE_TTL_SEKUND = 30;
@@ -49,8 +49,8 @@ router.get("/pckpoolbalance", async (req, res) => {
     let data = cacheGet("pckpoolbalance");
 
     if (data === undefined) {
-      const vysledek = await spustitDotaz(dotazy.VSECHNA_DATA_PACKAGING);
-      data = vysledek.rows;
+      const vysledek = await volatConnector("/packaging");
+      data = vysledek.data;
       cacheSet("pckpoolbalance", data, CACHE_TTL_SEKUND);
     }
 
@@ -69,8 +69,8 @@ async function nacistPrehled(periodType, cacheKlic) {
   let pivot = cacheGet(cacheKlic);
   if (pivot !== undefined) return pivot;
 
-  const vysledek = await spustitDotaz(dotazy.DATA_PACKAGING_PODLE_OBDOBI, { typObdobi: periodType });
-  pivot = sestavitPivotTabulku(vysledek.rows, periodType, ["PckPoolBalance", "requirement_qty", "RequiredPackagingQty"]);
+  const vysledek = await volatConnector("/packaging", {query: { period_type: periodType} });
+  pivot = sestavitPivotTabulku(vysledek.data, periodType, ["PckPoolBalance", "requirement_qty", "RequiredPackagingQty"]);
   cacheSet(cacheKlic, pivot, CACHE_TTL_SEKUND);
   return pivot;
 }
@@ -107,8 +107,8 @@ router.get("/pareto", async (req, res) => {
 
     if (data === undefined) {
       const [potreba, nakoupeno] = await Promise.all([
-        spustitDotaz(dotazy.PARETO_POTREBA_OBALU, { obdobi }),
-        spustitDotaz(dotazy.PARETO_NAKOUPENO)
+        volatConnector("/pareto/potreba",{ query: { period: obdovi } }),
+        volatConnector("/pareto/nakoupeno")
       ]);
 
       const nakoupenoMapa = new Map(
@@ -142,8 +142,8 @@ router.get("/projects", async (req, res) => {
     let projects = cacheGet("projects");
 
     if (projects === undefined) {
-      const vysledek = await spustitDotaz(dotazy.SEZNAM_PROJEKTU);
-      projects = vysledek.rows.map((x) => x.Project);
+      const vysledek = await volatConnector("/projects");
+      projects = vyskledek.data;
       cacheSet("projects", projects, 300);
     }
 
@@ -159,8 +159,8 @@ router.get("/projects", async (req, res) => {
 =========================================================== */
 router.get("/empties", async (req, res) => {
   try {
-    const vysledek = await spustitDotaz(dotazy.VSECHNY_EMPTIES);
-    odeslatJsonSEtag(req, res, vysledek.rows, 5);
+    const vysledek = await volatConnector("/empties");
+    odeslatJsonSEtag(req, res, vysledek.data, 5);
   } catch (err) {
     console.error("CHYBA /api/empties:", err.message);
     res.status(err.statusCode || 500).json({ error: "Chyba při načítání tabulky Empties.", detail: err.message });
@@ -181,18 +181,14 @@ router.post("/empties", async (req, res) => {
   } = req.body || {};
 
   try {
-    const vysledek = await spustitDotaz(dotazy.PRIDAT_EMPTIES_RADEK, {
-      SAP_ID,
-      Project,
-      Loop: cislo(Loop),
-      Loop_simulace: cislo(Loop_simulace),
-      Nakoupeno: cislo(Nakoupeno),
-      Disponent,
-      Cena_za_ks: cislo(Cena_za_ks),
-      Pro_budget_budeme_dokupovat: cislo(Pro_budget_budeme_dokupovat)
+    const vysledek = await volatConnector("/empties", {
+      method: "POST",
+      body: {
+        SAP_ID, Project, Loop, Loop_simulace, Nakoupeno, Disponent, Cena_za_ks, Pro_budget_budeme_dokupovat
+      }
     });
 
-    res.json({ ok: true, EmptiesID: vysledek.rows?.[0]?.EmptiesID ?? null });
+    res.json({ ok: true, EmptiesID: vysledek.data?.EmptiesID ?? null});
   } catch (err) {
     console.error("CHYBA POST /api/empties:", err.message);
     res.status(err.statusCode || 500).json({ error: "Chyba při přidání nového řádku do Empties.", detail: err.message });
@@ -203,30 +199,20 @@ router.put("/empties/:id", async (req, res) => {
   const id = Number(req.params.id);
   const { field, value } = req.body || {};
 
-  const sqlNazevSloupce = dotazy.EDITOVATELNA_POLE_EMPTIES[field];
-
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Neplatné EmptiesID." });
-  if (!sqlNazevSloupce) return res.status(400).json({ error: "Neplatné pole pro update." });
-
-  const cisloPole = new Set(["Loop", "Loop_simulace", "Nakoupeno", "Cena_za_ks", "Pro_budget_budeme_dokupovat"]);
-
-  let hodnota = value;
-  if (cisloPole.has(field)) {
-    hodnota = value === null || value === "" ? null : Number(value);
-    if (!Number.isFinite(hodnota)) hodnota = null;
-  } else {
-    hodnota = value === null || value === undefined ? null : String(value);
-  }
 
   try {
-    const dotaz = dotazy.upravitEmptiesSloupec(sqlNazevSloupce);
-    const vysledek = await spustitDotaz(dotaz, { hodnota, id });
-    res.json({ ok: true, updatedRows: vysledek.rowsAffected });
+    const vysledek = await volatConnector(`/empties/${id}`, {
+      method: "PUT",
+      body: { field, value }
+    });
+    res.json({ ok: true, updatedRows: vysledek.updatedRows });
   } catch (err) {
     console.error("CHYBA PUT /api/empties/:id:", err.message);
     res.status(err.statusCode || 500).json({ error: "Chyba při ukládání změny.", detail: err.message });
   }
 });
+
 
 /* ===========================================================
    POST /api/load-source (tlačítko "Načíst data" - import z Excelu)

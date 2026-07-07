@@ -44,8 +44,15 @@ app.get('/health/db', getHealthDb);
 app.use(apiKeyAuth);
 
 // --- Napojení routes (chráněné API klíčem) ---
-const sapIdsRoutes = require('./routes/sapIds');
-app.use('/api/v1', sapIdsRoutes);
+const packagingRoutes = require('./routes/packaging');
+const paretoRoutes = require('./routes/pareto');
+const projectsRoutes = require('./routes/projects');
+const emptiesRoutes = require('./routes/empties');
+
+app.use('/api/v1', packagingRoutes);
+app.use('/api/v1', paretoRoutes);
+app.use('/api/v1', projectsRoutes);
+app.use('/api/v1', emptiesRoutes);
 
 // Až přibudou další skupiny endpointů, přidají se stejným způsobem:
 // const ordersRoutes = require('./routes/orders');

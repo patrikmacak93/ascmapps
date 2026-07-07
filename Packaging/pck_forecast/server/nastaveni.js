@@ -19,7 +19,10 @@ module.exports = {
   // dotazy z sql-dotazy.js. Pokud shared-api běží jinde/na jiném
   // portu, uprav tuhle adresu (nebo nastav proměnnou prostředí
   // PCK_SHARED_API_BASE).
-  SHARED_API_URL: process.env.PCK_SHARED_API_BASE || "https://fsas00025vma.vt1.vitesco.com:4443/api",
+  SQL_CONNECTOR_URL:
+    process.env.PCK_SQL_CONNECTOR_BASE || "http://fsas00025vma.vt1.vitesco.com:4000/api/v1",
+  SQL_CONNECTOR_API_KEY:
+    process.env.PCK_SQL_CONNECTOR_API_KEY || "bcc485148f97728f7f7468410cf23e591b94dab0c2fa1fb3717138f952f2d507",
 
   // ---- Import dat z Excelu (tlačítko "Načíst data") ----
   // PYTHON_PATH - úplná cesta k python.exe NA SERVERU, kde běží
