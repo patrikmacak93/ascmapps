@@ -70,7 +70,7 @@ async function nacistPrehled(periodType, cacheKlic) {
   if (pivot !== undefined) return pivot;
 
   const vysledek = await volatConnector("/packaging", {query: { period_type: periodType} });
-  pivot = sestavitPivotTabulku(vysledek.data, periodType, ["PckPoolBalance", "requirement_qty", "RequiredPackagingQty"]);
+  pivot = sestavitPivotTabulku(vysledek.data, periodType, ["PckPoolBalance", "PckPoolBalanceSim", "requirement_qty", "RequiredPackagingQty"]);
   cacheSet(cacheKlic, pivot, CACHE_TTL_SEKUND);
   return pivot;
 }

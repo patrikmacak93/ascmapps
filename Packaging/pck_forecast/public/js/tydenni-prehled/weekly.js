@@ -22,4 +22,9 @@ export function initWeeklyTab() {
     needsToggles[TABLE_ID].packaging = !!e.target.checked;
     renderPivotTableById(TABLE_ID);
   });
+
+  $("weeklyPoolSimToggle").addEventListener("change", (e) => {
+    needsToggles[TABLE_ID].poolSim = !!e.target.checked;
+    renderPivotTableById(TABLE_ID);
+  });
 }

@@ -21,4 +21,9 @@ export function initYearlyTab() {
     needsToggles[TABLE_ID].packaging = !!e.target.checked;
     renderPivotTableById(TABLE_ID);
   });
+
+  $("yearlyPoolSimToggle").addEventListener("change", (e) => {
+    needsToggles[TABLE_ID].poolSim = !!e.target.checked;
+    renderPivotTableById(TABLE_ID);
+  });
 }

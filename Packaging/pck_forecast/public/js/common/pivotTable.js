@@ -50,10 +50,12 @@ export function renderPivotTable(tableId, periods, rows) {
 
   const showNeedsMaterial = !!needsToggles[tableId].material;
   const showNeedsPackaging = !!needsToggles[tableId].packaging;
+  const showPoolSim = !!needsToggles[tableId].poolSim;
 
   const displayColumns = [];
   for (const p of periods) {
     displayColumns.push({ period: p, metric: "PckPoolBalance", key: `${p}__PckPoolBalance`, label: p });
+    if (showPoolSim) displayColumns.push({ period: p, metric: "PckPoolBalanceSim", key: `${p}__PckPoolBalanceSim`, label: `${p} (Simulace Poolu)` });
     if (showNeedsMaterial) displayColumns.push({ period: p, metric: "requirement_qty", key: `${p}__requirement_qty`, label: `${p} (Potřeby - materiál)` });
     if (showNeedsPackaging) displayColumns.push({ period: p, metric: "RequiredPackagingQty", key: `${p}__RequiredPackagingQty`, label: `${p} (Potřeby - obaly)` });
   }
@@ -82,7 +84,7 @@ export function renderPivotTable(tableId, periods, rows) {
     for (const col of displayColumns) {
       const value = Number(r[col.key] ?? 0);
 
-      if (col.metric === "PckPoolBalance") {
+      if (col.metric === "PckPoolBalance" || col.metric === "PckPoolBalanceSim") {
         if (projectNode.total[col.key] === undefined) projectNode.total[col.key] = value;
         else projectNode.total[col.key] = Math.min(projectNode.total[col.key], value);
       } else {
@@ -237,6 +239,9 @@ export function renderPivotTable(tableId, periods, rows) {
   for (const col of displayColumns) {
     const th = document.createElement("th");
     th.className = "value-cell";
+    if (col.metric === "requirement_qty") th.classList.add("col-material");
+    if (col.metric === "RequiredPackagingQty") th.classList.add("col-packaging");
+    if (col.metric === "PckPoolBalanceSim") th.classList.add("col-poolSim");
     th.textContent = col.label;
     headerRow.appendChild(th);
   }

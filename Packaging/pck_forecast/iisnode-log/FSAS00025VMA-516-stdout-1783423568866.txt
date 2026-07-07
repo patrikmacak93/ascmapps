@@ -1,0 +1,7 @@
+API běží na http://localhost:\\.\pipe\5599730c-1665-441b-8291-3df438ba7645
+LOAD_SOURCE OK | durationMs=2996
+LOAD_SOURCE OK | durationMs=2720
+LOAD_SOURCE OK | durationMs=2932
+LOAD_SOURCE OK | durationMs=2637
+LOAD_SOURCE OK | durationMs=2703
+LOAD_SOURCE OK | durationMs=3264

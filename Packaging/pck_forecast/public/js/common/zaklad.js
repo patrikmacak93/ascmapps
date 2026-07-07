@@ -93,8 +93,8 @@ export const pivotTableData = {
 };
 
 export const needsToggles = {
-  weeklyTable: { material: false, packaging: false },
-  yearlyTable: { material: false, packaging: false }
+  weeklyTable: { material: false, packaging: false, poolSim: false },
+  yearlyTable: { material: false, packaging: false, poolSim: false }
 };
 
 export const tableStates = {

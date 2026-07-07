@@ -601,3 +601,12 @@ th.category-cell {
   background: rgba(60, 70, 80, 0.34) !important;
   box-shadow: inset 0 0 0 2px rgba(20, 25, 30, 0.98);
 }
+
+th.col-material { background: #b5651d;}
+td[data-cell-key*="__requirement_qty"] { background: #fbeee0;}
+
+th.col-packaging { background: #6193f8;}
+td[data-cell-key*="__RequiredPackagingQty"] { background: #b1cef8;}
+
+th.col-poolSim { background: #b770f6;}
+td[data-cell-key*="__PckPoolBalanceSim"] { background: #eddffa;}
