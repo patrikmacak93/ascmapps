@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SCM Reporting – rozcestník</title>
+<style>
+  /* ============================================================
+     Schaeffler-style tokens
+     ============================================================ */
+  :root {
+    --brand:        #00893d;   /* Schaeffler green            */
+    --brand-dark:   #00632b;   /* hlubší zelená (hlavička)    */
+    --brand-darker: #013b1c;   /* nejtmavší, pro hloubku      */
+    --brand-lime:   #7ab800;   /* jediný světlý akcent (šipka)*/
+
+    --bg:      #eef1f0;        /* stránka                     */
+    --surface: #ffffff;        /* dlaždice                    */
+    --ink:     #14201a;        /* text                        */
+    --ink-soft:#5a6560;        /* popisky                     */
+    --line:    #dce2df;        /* linky / rámečky             */
+
+    --radius: 14px;
+    --shadow:      0 1px 2px rgba(1,59,28,.06), 0 8px 24px rgba(1,59,28,.06);
+    --shadow-lift: 0 2px 4px rgba(1,59,28,.08), 0 18px 40px rgba(1,59,28,.14);
+
+    --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; }
+
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+  /* ============================================================
+     Top bar – tenký zelený proužek + wordmark
+     ============================================================ */
+  .topbar {
+    background: var(--brand-dark);
+    color: #fff;
+  }
+  .topbar .wrap {
+    display: flex; align-items: center; gap: 14px;
+    height: 56px;
+  }
+  .wordmark {
+    font-weight: 700; font-size: 20px; letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .wordmark small {
+    display: block; font-size: 10px; letter-spacing: .22em;
+    font-weight: 600; opacity: .8; margin-top: -2px;
+  }
+  .topbar-spacer { flex: 1; }
+  .topbar-meta {
+    font-size: 12.5px; letter-spacing: .04em; opacity: .85;
+    border-left: 1px solid rgba(255,255,255,.25);
+    padding-left: 14px;
+  }
+
+  /* ============================================================
+     Nadpis stránky (bez baneru)
+     ============================================================ */
+  .page-head {
+    border-bottom: 1px solid var(--line);
+    padding: 30px 0 26px;
+  }
+  .page-head h1 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700; letter-spacing: -.01em; color: var(--ink);
+  }
+  .page-head p {
+    margin: 6px 0 0; font-size: 14.5px; color: var(--ink-soft);
+  }
+
+  /* ============================================================
+     Sekce dlaždic
+     ============================================================ */
+  main { padding: 34px 0 72px; }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .section-head h2 {
+    margin: 0; font-size: 15px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink);
+  }
+  .section-head .count { font-size: 13px; color: var(--ink-soft); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  /* --- dlaždice = tlačítko na appku --- */
+  .tile {
+    position: relative;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 24px 22px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  /* levá zelená lišta, která vyroste při hoveru */
+  .tile::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; background: var(--brand);
+    transform: scaleY(.28); transform-origin: top;
+    transition: transform .22s ease;
+  }
+  a.tile:hover, a.tile:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+    border-color: #c3d2c8;
+  }
+  a.tile:hover::before, a.tile:focus-visible::before { transform: scaleY(1); }
+  a.tile:focus-visible { outline: 3px solid var(--brand-lime); outline-offset: 3px; }
+
+  .tile-icon {
+    width: 46px; height: 46px; border-radius: 11px;
+    display: grid; place-items: center;
+    background: #e7f2ea; color: var(--brand-dark);
+    margin-bottom: 18px;
+  }
+  .tile-icon svg { width: 24px; height: 24px; }
+
+  .tile-eyebrow {
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    font-weight: 700; color: var(--brand); margin-bottom: 8px;
+  }
+  .tile-name {
+    margin: 0 0 6px; font-size: 20px; font-weight: 700;
+    letter-spacing: -.01em; color: var(--ink);
+  }
+  .tile-desc {
+    margin: 0; font-size: 14px; color: var(--ink-soft); flex: 1;
+  }
+  .tile-go {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 18px; font-size: 13.5px; font-weight: 600;
+    color: var(--brand-dark);
+  }
+  .tile-go svg {
+    width: 16px; height: 16px;
+    transition: transform .2s ease;
+  }
+  a.tile:hover .tile-go svg, a.tile:focus-visible .tile-go svg { transform: translateX(4px); }
+  a.tile:hover .tile-go, a.tile:focus-visible .tile-go { color: var(--brand-lime); }
+
+  /* --- dlaždice "Připravujeme" --- */
+  .tile-soon { cursor: default; opacity: .72; }
+  .tile-soon .tile-icon { background: #edf0ee; color: #9aa6a0; }
+  .tile-soon .tile-eyebrow { color: var(--ink-soft); }
+  .badge-soon {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 700; color: var(--ink-soft);
+    background: #edf0ee; border: 1px solid var(--line);
+    padding: 4px 9px; border-radius: 999px;
+  }
+
+  /* ============================================================
+     Footer
+     ============================================================ */
+  footer {
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft); font-size: 13px;
+  }
+  footer .wrap {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 22px 28px; flex-wrap: wrap;
+  }
+
+  @media (max-width: 560px) {
+    .wrap { padding-left: 20px; padding-right: 20px; }
+    .grid { grid-template-columns: 1fr; }
+    .topbar-meta { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- horní lišta -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="wordmark">Schaeffler Frenštát pod Radhoštěm<small>Supply&nbsp;Chain</small></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-meta">Interní portál</div>
+    </div>
+  </div>
+
+  <!-- nadpis stránky (bez baneru) -->
+  <div class="page-head">
+    <div class="wrap">
+      <h1>SCM Reporting</h1>
+      <p>Rozcestník reportovacích aplikací dodavatelského řetězce.</p>
+    </div>
+  </div>
+
+  <!-- dlaždice -->
+  <main>
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Aplikace</h2>
+        <span class="count" id="appCount"></span>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>SCM Reporting · interní použití</span>
+      <span id="year"></span>
+    </div>
+  </footer>
+
+<script>
+  /* ============================================================
+     SEZNAM APLIKACÍ
+     Přidání nové appky = jeden objekt do pole níže.
+       name   – název na dlaždici
+       tag    – kategorie (malý zelený nadpis)
+       desc   – jednořádkový popis
+       url    – kam tlačítko vede (uprav dle nasazení na IIS)
+       icon   – klíč ikony: "box" | "chart" | "table" | "truck" | "cog"
+       soon   – true = dlaždice "Připravujeme" (nejde kliknout)
+     ============================================================ */
+  const APPS = [
+    {
+      name: "Packaging Pool Management",
+      tag:  "Řízení obalů",
+      desc: "Zůstatky poolu (PckPoolBalance), simulace poolu, potřeby materiálu a obalů, Pareto přehledy.",
+      url:  "/pckpoolreport/",            // ← uprav podle reálné cesty na serveru
+      icon: "box"
+    },
+
+    // --- příklady připravovaných dlaždic – nahraď nebo smaž ---
+    {
+      name: "Databáze dodavatelských obalů",
+      tag:  "Vývoj obalů",
+      desc: "Přehled obalových konceptů s odkazy na PSDS",
+      url:  "#",
+      icon: "table",
+      soon: true
+    }
+  ];
+
+  /* ---- ikony (jednoduché linkové SVG, bez značkové grafiky) ---- */
+  const ICONS = {
+    box:   '<path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    table: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v16"/>',
+    truck: '<path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/>',
+    cog:   '<circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>'
+  };
+  const ARROW = '<path d="M5 12h14M13 6l6 6-6 6"/>';
+
+  function iconSvg(key) {
+    const body = ICONS[key] || ICONS.box;
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+         + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  }
+
+  function tileHtml(app) {
+    const inner =
+      '<div class="tile-icon">' + iconSvg(app.icon) + '</div>' +
+      '<div class="tile-eyebrow">' + app.tag + '</div>' +
+      '<h3 class="tile-name">' + app.name + '</h3>' +
+      '<p class="tile-desc">' + app.desc + '</p>';
+
+    if (app.soon) {
+      return '<div class="tile tile-soon">' +
+             '<span class="badge-soon">Připravujeme</span>' + inner + '</div>';
+    }
+    return '<a class="tile" href="' + app.url + '" aria-label="Otevřít – ' + app.name + '">' +
+           inner +
+           '<span class="tile-go">Otevřít' +
+           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+           'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ARROW + '</svg>' +
+           '</span></a>';
+  }
+
+  const grid = document.getElementById("grid");
+  grid.innerHTML = APPS.map(tileHtml).join("");
+
+  const live = APPS.filter(a => !a.soon).length;
+  document.getElementById("appCount").textContent =
+    live + (live === 1 ? " aktivní aplikace" : live >= 2 && live <= 4 ? " aktivní aplikace" : " aktivních aplikací");
+
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

@@ -19,6 +19,7 @@ import { initGrafyTab } from "./grafy/pareto.js";
 import { initWeeklyTab } from "./tydenni-prehled/weekly.js";
 import { initYearlyTab } from "./rocni-prehled/yearly.js";
 import { initEmptiesTab } from "./empties/empties.js";
+import { initBudgetTab } from "./budget/budget.js";
 
 // ===== Hlavička: tlačítko "Načíst data" =====
 $("loadBtn").addEventListener("click", loadFromSourceThenAll);
@@ -28,6 +29,7 @@ initGrafyTab();
 initWeeklyTab();
 initYearlyTab();
 initEmptiesTab();
+initBudgetTab();
 
 // ===== Sbalit/rozbalit strom (Obal/Projekt/Materiál) =====
 // Společné pro Týdenní i Roční přehled - které tabulky a na jakou
@@ -48,3 +50,4 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     clearAllHover();
   }, { passive: true });
 });
+

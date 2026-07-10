@@ -213,6 +213,28 @@ router.put("/empties/:id", async (req, res) => {
   }
 });
 
+/* ===========================================================
+   GET /api/budget
+   -----------------------------------------------------------
+   Načte celý view [FSTASCM].[pckForecast].[vw_budget] přes
+   sql-connector (/budget) a pošle prohlížeči pole řádků.
+=========================================================== */
+router.get("/budget", async (req, res) => {
+  try {
+    let data = cacheGet("budget");
+
+    if (data === undefined) {
+      const vysledek = await volatConnector("/budget");
+      data = vysledek.data;
+      cacheSet("budget", data, CACHE_TTL_SEKUND);
+    }
+
+    odeslatJsonSEtag(req, res, data, CACHE_TTL_SEKUND);
+  } catch (err) {
+    console.error("CHYBA /api/budget:", err.message);
+    res.status(err.statusCode || 500).json({ error: "Chyba při načítání tabulky Budget.", detail: err.message });
+  }
+});
 
 /* ===========================================================
    POST /api/load-source (tlačítko "Načíst data" - import z Excelu)
@@ -279,3 +301,4 @@ router.post("/load-source", async (req, res) => {
 });
 
 module.exports = router;
+

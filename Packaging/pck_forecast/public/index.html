@@ -15,6 +15,7 @@
     <div class="header">
       <div class="title-row">
         <div class="title-block">
+          <a href="/" class="back-link">← Zpět na hlavní stránku</a>
           <h1>📊 Packaging pool management Dashboard</h1>
         </div>
         <div class="header-actions">
@@ -30,6 +31,7 @@
         <button class="tab-btn" data-tab="weeklyTableTab">Týdenní přehled</button>
         <button class="tab-btn" data-tab="yearlyTableTab">Roční přehled</button>
         <button class="tab-btn" data-tab="emptiesTab">Empties</button>
+        <button class="tab-btn" data-tab="budgetTab">Budget</button>
       </div>
 
       <div id="chartsTab" class="tab-content active">
@@ -133,6 +135,22 @@
           </div>
           <div class="table-wrapper">
             <table id="emptiesTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="budgetTab" class="tab-content">
+        <div class="panel">
+          <h3>Budget</h3>
+          <div class="empties-tools">
+            <button class="btn-primary" id="loadBudgetBtn">Načíst Budget</button>
+            <span class="status" id="budgetStatus">Tabulka Budget není načtena.</span>
+          </div>
+          <div class="table-wrapper">
+            <table id="budgetTable">
               <thead></thead>
               <tbody></tbody>
             </table>

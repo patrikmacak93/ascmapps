@@ -11,3 +11,4 @@ Thumbs.debug
 .idea
 dist/
 build/
+iisnode-log/

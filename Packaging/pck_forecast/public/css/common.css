@@ -8,50 +8,59 @@
 ========================= */
 
 :root {
-  --bg-page: #f6f8fb;
+  /* Schaeffler-style paleta – sladěno s rozcestníkem "SCM Reporting" */
+  --brand:        #00893d;   /* Schaeffler green            */
+  --brand-dark:   #00632b;   /* hlubší zelená (hlavičky)    */
+  --brand-darker: #013b1c;   /* nejtmavší, pro hloubku      */
+  --brand-lime:   #7ab800;   /* světlý akcent               */
+
+  --bg-page: #eef1f0;
   --surface: #ffffff;
-  --surface-2: #fbfcfe;
-  --border: #B0C3C8;
-  --border-2: #B0C3C8;
+  --surface-2: #f6f9f7;
+  --border: #dce2df;
+  --border-2: #dce2df;
 
-  --text: #22262b;
-  --text-2: #6b7280;
-  --text-3: #8792a2;
+  --text: #14201a;
+  --text-2: #5a6560;
+  --text-3: #8a938d;
 
-  --green: #95C09A;
-  --green-dark: #6f9b75;
-  --green-soft: #eef7e6;
+  /* zpětně kompatibilní aliasy (používané napříč CSS appky) */
+  --green: #00893d;
+  --green-dark: #00632b;
+  --green-soft: #e7f2ea;
 
-  --green-num: #5f9d4f;
-  --red-num: #c96b6b;
+  --green-num: #00893d;
+  --red-num: #c0392b;
 
-  --shadow: 0 2px 14px rgba(24, 39, 75, 0.08);
-  --shadow-soft: 0 1px 4px rgba(24, 39, 75, 0.06);
-  --radius: 12px;
+  --shadow:      0 1px 2px rgba(1,59,28,.06), 0 8px 24px rgba(1,59,28,.06);
+  --shadow-soft: 0 1px 2px rgba(1,59,28,.06);
+  --shadow-lift: 0 2px 4px rgba(1,59,28,.08), 0 18px 40px rgba(1,59,28,.14);
+  --radius: 14px;
 
-  --level-sap-border: #4f8a56;
-  --level-project-border: #4d83b7;
-  --level-material-border: #b8c0c7;
+  /* hierarchie Obal / Projekt / Materiál – v zeleném rodokmenu */
+  --level-sap-border: #00893d;
+  --level-project-border: #4f8a56;
+  --level-material-border: #c3d2c8;
 
-  --level-sap-left: #4f8a56;
-  --level-project-left: #4d83b7;
-  --level-material-left: #b8c0c7;
+  --level-sap-left: #00893d;
+  --level-project-left: #4f8a56;
+  --level-material-left: #c3d2c8;
 
-  --level-sap-badge-bg: #5f9d4f;
-  --level-project-badge-bg: #3f78ad;
-  --level-material-badge-bg: #7a8793;
+  --level-sap-badge-bg: #00632b;
+  --level-project-badge-bg: #4f8a56;
+  --level-material-badge-bg: #7a8b80;
   --level-badge-text: #ffffff;
 
-  --hover-gray: rgba(120, 130, 140, 0.18);
-  --hover-gray-strong: rgba(65, 75, 85, 0.42);
-  --selected-gray: rgba(90, 100, 110, 0.28);
-  --selected-border: rgba(40, 50, 60, 0.95);
+  --hover-gray: rgba(0, 99, 43, 0.10);
+  --hover-gray-strong: rgba(1, 59, 28, 0.30);
+  --selected-gray: rgba(0, 99, 43, 0.18);
+  --selected-border: rgba(1, 59, 28, 0.95);
 }
 
 html, body { height: 100%; margin: 0; }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg-page);
   color: var(--text);
   overflow: hidden;
@@ -72,6 +81,7 @@ body {
 .app-shell {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--brand);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   height: 100%;
@@ -88,7 +98,7 @@ body {
   padding: 14px 16px 12px;
   border-bottom: 1px solid var(--border-2);
   flex: 0 0 auto;
-  background: linear-gradient(to bottom, #fff, #fcfdff);
+  background: linear-gradient(to bottom, #ffffff, #f6f9f7);
 }
 
 .title-row {
@@ -105,6 +115,31 @@ body {
   line-height: 1.2;
   color: var(--text);
   font-weight: 700;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 5px 11px;
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.back-link:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.back-link:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .header-actions {
@@ -142,7 +177,7 @@ button:active { transform: translateY(1px); }
   flex: 1 1 auto;
   padding: 14px 16px 16px;
   gap: 12px;
-  background: linear-gradient(to bottom, #fff, #fcfdff);
+  background: linear-gradient(to bottom, #ffffff, #f6f9f7);
 }
 
 .tabs {
@@ -154,7 +189,7 @@ button:active { transform: translateY(1px); }
 }
 
 .tab-btn {
-  background: #f4f7fb;
+  background: #eaf0ec;
   border: 1px solid var(--border);
   border-bottom: none;
   color: var(--text-2);
@@ -310,7 +345,7 @@ th, td {
 th {
   position: sticky;
   top: 0;
-  background: #5f87b1;
+  background: var(--brand-dark);
   color: #fff;
   z-index: 2;
 }
@@ -385,7 +420,7 @@ th.category-cell {
   position: sticky;
   left: 0;
   z-index: 5;
-  background: #5f87b1;
+  background: var(--brand-dark);
   color: #fff;
   box-shadow: 2px 0 0 rgba(255, 255, 255, 0.25);
 }
@@ -401,8 +436,8 @@ th.category-cell {
 }
 
 .level-material td {
-  border-top: 1px solid #dde3e8;
-  border-bottom: 1px solid #dde3e8;
+  border-top: 1px solid #e3e8e5;
+  border-bottom: 1px solid #e3e8e5;
 }
 
 .level-sap td.category-cell {
@@ -601,12 +636,3 @@ th.category-cell {
   background: rgba(60, 70, 80, 0.34) !important;
   box-shadow: inset 0 0 0 2px rgba(20, 25, 30, 0.98);
 }
-
-th.col-material { background: #b5651d;}
-td[data-cell-key*="__requirement_qty"] { background: #fbeee0;}
-
-th.col-packaging { background: #6193f8;}
-td[data-cell-key*="__RequiredPackagingQty"] { background: #b1cef8;}
-
-th.col-poolSim { background: #b770f6;}
-td[data-cell-key*="__PckPoolBalanceSim"] { background: #eddffa;}

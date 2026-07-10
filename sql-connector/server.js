@@ -48,11 +48,13 @@ const packagingRoutes = require('./routes/packaging');
 const paretoRoutes = require('./routes/pareto');
 const projectsRoutes = require('./routes/projects');
 const emptiesRoutes = require('./routes/empties');
+const budgetRoutes = require('./routes/budget');
 
 app.use('/api/v1', packagingRoutes);
 app.use('/api/v1', paretoRoutes);
 app.use('/api/v1', projectsRoutes);
 app.use('/api/v1', emptiesRoutes);
+app.use('/api/v1', budgetRoutes);
 
 // Až přibudou další skupiny endpointů, přidají se stejným způsobem:
 // const ordersRoutes = require('./routes/orders');
