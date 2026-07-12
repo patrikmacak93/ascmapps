@@ -1,0 +1,244 @@
+/* ============================================================
+     Schaeffler-style tokens
+     ============================================================ */
+  :root {
+    --brand:        #00893d;   /* Schaeffler green            */
+    --brand-dark:   #00632b;   /* hlubší zelená (hlavička)    */
+    --brand-darker: #013b1c;   /* nejtmavší, pro hloubku      */
+    --brand-lime:   #7ab800;   /* jediný světlý akcent (šipka)*/
+
+    --bg:      #eef1f0;        /* stránka                     */
+    --surface: #ffffff;        /* dlaždice                    */
+    --ink:     #14201a;        /* text                        */
+    --ink-soft:#5a6560;        /* popisky                     */
+    --line:    #dce2df;        /* linky / rámečky             */
+
+    --radius: 14px;
+    --shadow:      0 1px 2px rgba(1,59,28,.06), 0 8px 24px rgba(1,59,28,.06);
+    --shadow-lift: 0 2px 4px rgba(1,59,28,.08), 0 18px 40px rgba(1,59,28,.14);
+
+    --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; }
+
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+  /* ============================================================
+     Top bar – tenký zelený proužek + wordmark
+     ============================================================ */
+  .topbar {
+    background: var(--brand-dark);
+    color: #fff;
+  }
+  .topbar .wrap {
+    display: flex; align-items: center; gap: 14px;
+    height: 56px;
+  }
+  .wordmark {
+    font-weight: 700; font-size: 20px; letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .wordmark small {
+    display: block; font-size: 10px; letter-spacing: .22em;
+    font-weight: 600; opacity: .8; margin-top: -2px;
+  }
+  .topbar-spacer { flex: 1; }
+  .topbar-meta {
+    font-size: 12.5px; letter-spacing: .04em; opacity: .85;
+    border-left: 1px solid rgba(255,255,255,.25);
+    padding-left: 14px;
+  }
+
+  /* ============================================================
+     Nadpis stránky (bez baneru)
+     ============================================================ */
+  .page-head {
+    border-bottom: 1px solid var(--line);
+    padding: 30px 0 26px;
+  }
+  .page-head h1 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700; letter-spacing: -.01em; color: var(--ink);
+  }
+  .page-head p {
+    margin: 6px 0 0; font-size: 14.5px; color: var(--ink-soft);
+  }
+
+  /* ============================================================
+     Sekce dlaždic
+     ============================================================ */
+  main { padding: 34px 0 72px; }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .section-head h2 {
+    margin: 0; font-size: 15px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink);
+  }
+  .section-head .count { font-size: 13px; color: var(--ink-soft); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  /* --- dlaždice = tlačítko na appku --- */
+  .tile {
+    position: relative;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 24px 22px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  /* levá zelená lišta, která vyroste při hoveru */
+  .tile::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px; background: var(--brand);
+    transform: scaleY(.28); transform-origin: top;
+    transition: transform .22s ease;
+  }
+  a.tile:hover, a.tile:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+    border-color: #c3d2c8;
+  }
+  a.tile:hover::before, a.tile:focus-visible::before { transform: scaleY(1); }
+  a.tile:focus-visible { outline: 3px solid var(--brand-lime); outline-offset: 3px; }
+
+  .tile-icon {
+    width: 46px; height: 46px; border-radius: 11px;
+    display: grid; place-items: center;
+    background: #e7f2ea; color: var(--brand-dark);
+    margin-bottom: 18px;
+  }
+  .tile-icon svg { width: 24px; height: 24px; }
+
+  .tile-eyebrow {
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    font-weight: 700; color: var(--brand); margin-bottom: 8px;
+  }
+  .tile-name {
+    margin: 0 0 6px; font-size: 20px; font-weight: 700;
+    letter-spacing: -.01em; color: var(--ink);
+  }
+  .tile-desc {
+    margin: 0; font-size: 14px; color: var(--ink-soft); flex: 1;
+  }
+  .tile-go {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 18px; font-size: 13.5px; font-weight: 600;
+    color: var(--brand-dark);
+  }
+  .tile-go svg {
+    width: 16px; height: 16px;
+    transition: transform .2s ease;
+  }
+  a.tile:hover .tile-go svg, a.tile:focus-visible .tile-go svg { transform: translateX(4px); }
+  a.tile:hover .tile-go, a.tile:focus-visible .tile-go { color: var(--brand-lime); }
+
+  /* --- dlaždice "Připravujeme" --- */
+  .tile-soon { cursor: default; opacity: .72; }
+  .tile-soon .tile-icon { background: #edf0ee; color: #9aa6a0; }
+  .tile-soon .tile-eyebrow { color: var(--ink-soft); }
+  .badge-soon {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 700; color: var(--ink-soft);
+    background: #edf0ee; border: 1px solid var(--line);
+    padding: 4px 9px; border-radius: 999px;
+  }
+
+  /* ============================================================
+     Footer
+     ============================================================ */
+  footer {
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft); font-size: 13px;
+  }
+  footer .wrap {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 22px 28px; flex-wrap: wrap;
+  }
+
+  @media (max-width: 560px) {
+    .wrap { padding-left: 20px; padding-right: 20px; }
+    .grid { grid-template-columns: 1fr; }
+    .topbar-meta { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+.tile-note { margin-top: 8px; font-size: 12px; opacity: .7; }
+
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 14px;
+        padding: 6px 12px 6px 9px;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 999px;
+        background: #fff;
+        color: inherit;
+        font-size: 13px;
+        text-decoration: none;
+        transition: border-color .15s, background .15s;
+      }
+      .btn-back:hover { border-color: #00893d; background: rgba(0,137,61,.06); }
+      .btn-back svg { width: 16px; height: 16px; }
+
+      .auth-dlg {
+        border: none;
+        border-radius: 12px;
+        padding: 22px;
+        min-width: 320px;
+        box-shadow: 0 20px 50px rgba(0,0,0,.25);
+      }
+      .auth-dlg::backdrop { background: rgba(0,0,0,.35); }
+      .auth-dlg h3 { margin: 0 0 14px; font-size: 16px; }
+      .auth-dlg label { display: block; margin-bottom: 10px; font-size: 13px; }
+      .auth-dlg input {
+        display: block;
+        width: 100%;
+        margin-top: 4px;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font: inherit;
+        box-sizing: border-box;
+      }
+      .auth-err { color: #b00020; font-size: 13px; margin: 4px 0 10px; }
+      .auth-actions { display: flex; justify-content: flex-end; gap: 8px; }
+      .auth-actions button {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background: #fff;
+        font: inherit;
+        cursor: pointer;
+      }
+      .auth-actions .primary { background: #00893d; border-color: #00893d; color: #fff; }
