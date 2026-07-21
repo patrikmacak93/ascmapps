@@ -1,0 +1,13 @@
+{
+  "name": "ascmApps-root",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "start:sql-connector": "npm run start --workspace=services/sql-connector",
+    "start:packaging-database": "npm run start --workspace=apps/packaging-database",
+    "start:packaging-forecast": "npm run start --workspace=apps/packaging-forecast"
+  }
+}

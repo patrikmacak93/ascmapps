@@ -1,14 +1,32 @@
+# závislosti
 node_modules/
+
+# env
 .env
 .env.local
 .env.*.local
-.log
+
+# logy
+*.log
 logs/
-npm-debug.log
+iisnode-log/
+npm-debug.log*
+yarn-debug.log*
+
+# OS
 .DS_Store
-Thumbs.debug
+Thumbs.db
+
+# editory
 .vscode/
-.idea
+.idea/
+
+# build
 dist/
 build/
-iisnode-log/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/

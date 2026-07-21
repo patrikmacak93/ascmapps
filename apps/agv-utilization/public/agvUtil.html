@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AGV Utilization</title>
+
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="wrap">
+      <div class="wordmark">
+        Schaeffler Frenštát pod Radhoštěm<small>Supply&nbsp;Chain</small>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-meta">Interní portál</div>
+    </div>
+  </header>
+
+    <main id="pckDtbSearchRoot">
+        <div id="subPageHeader">
+            <div class="pck-title-block">
+                <div class="pck-subline">
+                    <a href="/" class="pck-back-link">
+                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                        <path d="M9.5 3L5 8l4.5 5" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Domů
+                    </a>
+                    <span id="pck-status" class="pck-status">Načítám…</span>
+                </div>
+            </div>
+
+        <div class="pck-controls">
+
+            <div class="pck-search-wrap">
+            <input type="search" id="pck-global-search" class="pck-global-search"
+                    placeholder="Hledat ve všech sloupcích…"
+                    aria-label="Hledat ve všech sloupcích">
+            <kbd class="pck-kbd">/</kbd>
+            </div>
+
+            <button type="button" id="pck-clear-filters" class="pck-btn" hidden>
+            Zrušit filtry
+            </button>
+
+            <div class="pck-columns-wrap">
+            <button type="button" id="pck-columns-btn" class="pck-btn"
+                    aria-expanded="false" aria-controls="pck-columns-panel">
+                Sloupce
+            </button>
+
+            <div id="pck-columns-panel" class="pck-columns-panel" hidden>
+                <div class="pck-columns-head">
+                <span>Zobrazené sloupce</span>
+                <label class="pck-columns-toggle">
+                    <input type="checkbox" id="pck-columns-all">
+                    Označit vše
+                </label>
+                </div>
+                <div id="pck-columns-list" class="pck-columns-list"></div>
+            </div>
+            </div>
+
+            <button type="button" id="pck-refresh-btn" class="pck-btn">Aktualizovat</button>
+
+            <button type="button" id="pck-export-btn" class="pck-btn pck-btn-primary">
+            Exportovat výběr
+            </button>
+
+            <label class="pck-rows-label" for="pck-items-per-page">
+            Řádků:
+            <select id="pck-items-per-page" name="pck-items-per-page">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="1000">1000</option>
+            </select>
+            </label>
+
+        </div>
+        </div>
+
+        <div id="pck-selection-bar" class="pck-selection-bar" hidden>
+        <span id="pck-selection-count"></span>
+        <button type="button" id="pck-clear-selection" class="pck-btn-inline">
+            Zrušit označení
+        </button>
+        </div>
+
+        <div class="pck-table-container">
+        <table id="pck-table">
+            <thead>
+            <tr id="pck-header-row"></tr>
+            <tr id="pck-filter-row"></tr>
+            </thead>
+            <tbody id="pck-body">
+            <tr><td class="pck-message">Načítám data…</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <nav class="pck-pagination" aria-label="Stránkování">
+        <button type="button" id="pck-prev-page">&laquo; Předchozí</button>
+        <span id="pck-page-info" aria-live="polite"></span>
+        <button type="button" id="pck-next-page">Další &raquo;</button>
+        </nav>
+    </main>
+
+  <!-- Detail řádku -->
+  <div id="pck-drawer" class="pck-drawer" role="dialog" aria-modal="true"
+       aria-labelledby="pck-drawer-title" hidden>
+    <div id="pck-drawer-backdrop" class="pck-drawer-backdrop"></div>
+    <aside class="pck-drawer-panel">
+      <header class="pck-drawer-header">
+        <h2 id="pck-drawer-title"></h2>
+        <div class="pck-drawer-tools">
+          <button type="button" id="pck-drawer-copy" class="pck-drawer-copy"
+                  title="Zkopírovat celý záznam"></button>
+          <button type="button" id="pck-drawer-close" class="pck-drawer-close"
+                  aria-label="Zavřít detail">&times;</button>
+        </div>
+      </header>
+      <div id="pck-drawer-body" class="pck-drawer-body"></div>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <span>SCM Reporting · interní použití</span>
+      <span id="year"></span>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>
+

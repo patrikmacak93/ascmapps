@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Packaging Database – Záznamy</title>
+
+  <link rel="stylesheet" href="../../../homepage.css">
+  <link rel="stylesheet" href="./pck-table.css">
+  <link rel="stylesheet" href="./pck-edit.css">
+
+  <!-- Adresa API — musí se načíst dřív než pck-auth.js a pck-edit-form.js. -->
+  <script src="./pck-config.js"></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="wrap">
+      <div class="wordmark">Schaeffler Frenštát pod Radhoštěm<small>Supply&nbsp;Chain</small></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-meta" id="pck-user-bar"></div>
+    </div>
+  </div>
+
+  <!-- Obsah je skrytý, dokud pckAuth nepotvrdí oprávnění "pckDtbEdit". -->
+  <main id="pckDtbEditRoot" hidden>
+
+    <!-- Stejný root jako pckDtbSearch.html → platí celá pck-table.css -->
+    <div id="pckDtbSearchRoot">
+
+      <div id="subPageHeader">
+        <div class="pck-title-block">
+          <div class="pck-subline">
+            <a href="index.html" class="pck-back-link">
+                <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                  <path d="M9.5 3L5 8l4.5 5" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Domů
+              </a>
+            <span id="pck-status" class="pck-status" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="pck-controls">
+          <button type="button" id="pck-new-record" class="pck-btn pck-btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Nový záznam
+          </button>
+
+          <div class="pck-search-wrap">
+            <input type="search" id="pck-global-search" class="pck-global-search"
+                   placeholder="Hledat ve všech sloupcích…">
+            <kbd class="pck-kbd">/</kbd>
+          </div>
+          <button type="button" id="pck-clear-filters" class="pck-btn" hidden>Zrušit filtry</button>
+
+          <div class="pck-columns-wrap">
+            <button type="button" id="pck-columns-btn" class="pck-btn">Sloupce</button>
+            <div id="pck-columns-panel" class="pck-columns-panel" hidden>
+              <div class="pck-columns-head">
+                <span>Zobrazené sloupce</span>
+                <label class="pck-columns-toggle">
+                  <input type="checkbox" id="pck-columns-all">
+                  Označit vše
+                </label>
+              </div>
+              <div id="pck-columns-list" class="pck-columns-list"></div>
+            </div>
+          </div>
+
+          <button type="button" id="pck-refresh-btn" class="pck-btn">Načíst znovu</button>
+          <button type="button" id="pck-export-btn" class="pck-btn">Exportovat výběr</button>
+
+          <label for="pck-items-per-page">
+            Řádků na stránku:
+            <select id="pck-items-per-page" name="item-per-page">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="1000">1000</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="pck-table-container">
+        <table id="pck-table">
+          <thead>
+            <tr id="pck-header-row"></tr>
+            <tr id="pck-filter-row"></tr>
+          </thead>
+          <tbody id="pck-body"></tbody>
+        </table>
+      </div>
+
+      <nav class="pck-pagination">
+        <button type="button" id="pck-prev-page" class="pck-btn">&laquo; Předchozí</button>
+        <span id="pck-page-info" aria-live="polite"></span>
+        <button type="button" id="pck-next-page" class="pck-btn">Další &raquo;</button>
+      </nav>
+    </div>
+
+    <!-- ===============================================================
+         PANEL SE ZÁZNAMEM — pole generuje pck-edit-form.js ze schématu
+         =============================================================== -->
+    <div id="recordBackdrop" class="record-backdrop" hidden></div>
+
+    <aside id="recordPanel" class="record-panel" role="dialog" aria-modal="true"
+           aria-labelledby="recordTitle" hidden>
+
+      <header class="record-head">
+        <div>
+          <span id="recordMode" class="record-mode"></span>
+          <h2 id="recordTitle">Nový záznam</h2>
+        </div>
+        <button type="button" id="recordClose" class="record-close"
+                aria-label="Zavřít panel">&times;</button>
+      </header>
+
+      <div class="record-body">
+        <nav id="recordNav" class="record-nav" aria-label="Skupiny polí"></nav>
+        <form id="recordForm" class="record-form">
+          <input type="hidden" id="f-ID" name="ID">
+          <!-- fieldsety generuje JS -->
+        </form>
+      </div>
+
+      <footer class="record-foot">
+        <div id="recordMessage" class="record-message" role="status"></div>
+        <div class="record-actions">
+          <button type="button" id="recordCancel">Zrušit</button>
+          <button type="submit" form="recordForm" id="recordSave" class="primary">Uložit</button>
+        </div>
+      </footer>
+    </aside>
+
+    <!-- Detail řádku (drawer z pck-table-search.js) -->
+    <div id="pck-drawer" class="pck-drawer" role="dialog" aria-modal="true"
+         aria-labelledby="pck-drawer-title" hidden>
+      <div id="pck-drawer-backdrop" class="pck-drawer-backdrop"></div>
+      <aside class="pck-drawer-panel">
+        <header class="pck-drawer-header">
+          <h2 id="pck-drawer-title"></h2>
+          <button type="button" id="pck-drawer-copy" class="pck-drawer-copy">Kopírovat</button>
+          <button type="button" id="pck-drawer-close" class="pck-drawer-close"
+                  aria-label="Zavřít detail">&times;</button>
+        </header>
+        <dl id="pck-drawer-body" class="pck-drawer-body"></dl>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>SCM Reporting · interní použití</span>
+      <span id="year"></span>
+    </div>
+  </footer>
+
+  <script src="./pck-auth.js"></script>
+  <script src="./pck-edit-form.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Tabulka díky tomu vykreslí sloupec Actions (Upravit / Duplikovat / Smazat).
+    window.pckDtbActions = true;
+
+    // Hromadný výběr řádků tu není k čemu — checkboxy vypínáme.
+    window.pckDtbSelection = false;
+
+    pckAuth.protect({
+      access: "pckDtbEdit",
+      content: "#pckDtbEditRoot",
+      title: "Přihlášení – obalové koncepty",
+      onReady: function () {
+        window.initPckDtbEditForm();
+
+        // Tabulku načteme až po přihlášení, ať se nefetchuje naprázdno.
+        var script = document.createElement("script");
+        script.src = "./pck-table-search.js";
+        document.body.appendChild(script);
+      }
+    });
+  </script>
+
+</body>
+</html>
+

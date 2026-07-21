@@ -1,0 +1,1068 @@
+/* ===========================================================================
+   PCK – Database Search · Schaeffler
+   Načítat AŽ ZA homepage.css.
+   =========================================================================== */
+
+   #pckDtbSearchRoot {
+    --sch-green: #00893d;
+    --sch-green-dark: #006c30;
+    --sch-green-tint: #e8f3ec;
+    --sch-anthracite: #3c3c3b;
+    --sch-grey-text: #6b6f6c;
+    --sch-grey-line: #d7d9d6;
+    --sch-grey-bg: #f4f5f3;
+    --sch-white: #ffffff;
+    --sch-red: #c8102e;
+  
+    --pck-head-h: 38px;
+    --pck-radius: 2px;
+  
+    font-family: "Frutiger", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--sch-anthracite);
+    padding: 5px 32px 0px;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Hlavička podstránky
+     --------------------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot #subPageHeader {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--sch-green);
+  }
+  
+  #pckDtbSearchRoot .pck-title-block h1 {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  
+  #pckDtbSearchRoot .pck-subline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  
+  #pckDtbSearchRoot .pck-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px 3px 7px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--sch-green-dark);
+    text-decoration: none;
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+    border-radius: var(--pck-radius);
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+  
+  #pckDtbSearchRoot .pck-back-link:hover {
+    background: var(--sch-green);
+    border-color: var(--sch-green);
+    color: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot .pck-status {
+    font-size: 0.76rem;
+    color: var(--sch-grey-text);
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Ovládací lišta
+     --------------------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot .pck-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+  }
+  
+  #pckDtbSearchRoot button,
+  #pckDtbSearchRoot select,
+  #pckDtbSearchRoot input {
+    font: inherit;
+    border-radius: var(--pck-radius);
+  }
+  
+  #pckDtbSearchRoot button {
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+  
+  #pckDtbSearchRoot .pck-btn {
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--sch-anthracite);
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot .pck-btn:hover:not(:disabled) {
+    border-color: var(--sch-green);
+    color: var(--sch-green-dark);
+  }
+  
+  #pckDtbSearchRoot .pck-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  
+  #pckDtbSearchRoot .pck-btn-primary {
+    background: var(--sch-green);
+    border-color: var(--sch-green);
+    color: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot .pck-btn-primary:hover:not(:disabled) {
+    background: var(--sch-green-dark);
+    border-color: var(--sch-green-dark);
+    color: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot .pck-btn-inline {
+    padding: 2px 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--sch-green-dark);
+    background: transparent;
+    border: 1px solid var(--sch-green);
+  }
+  
+  #pckDtbSearchRoot .pck-btn-inline:hover {
+    background: var(--sch-green);
+    color: var(--sch-white);
+  }
+  
+  /* Globální hledání */
+  
+  #pckDtbSearchRoot .pck-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  #pckDtbSearchRoot .pck-global-search {
+    width: 240px;
+    padding: 7px 34px 7px 10px;
+    font-size: 0.82rem;
+    color: var(--sch-anthracite);
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot .pck-global-search:focus {
+    outline: none;
+    border-color: var(--sch-green);
+    box-shadow: 0 0 0 2px rgba(0, 137, 61, 0.18);
+  }
+  
+  #pckDtbSearchRoot .pck-kbd {
+    position: absolute;
+    right: 8px;
+    padding: 1px 6px;
+    font-size: 0.7rem;
+    font-family: inherit;
+    color: var(--sch-grey-text);
+    background: var(--sch-grey-bg);
+    border: 1px solid var(--sch-grey-line);
+    border-radius: var(--pck-radius);
+    pointer-events: none;
+  }
+  
+  #pckDtbSearchRoot .pck-global-search:focus + .pck-kbd {
+    display: none;
+  }
+  
+  /* Řádků na stránku */
+  
+  #pckDtbSearchRoot .pck-rows-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--sch-grey-text);
+    white-space: nowrap;
+  }
+  
+  #pckDtbSearchRoot select {
+    padding: 6px 8px;
+    font-size: 0.82rem;
+    color: var(--sch-anthracite);
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot select:hover {
+    border-color: var(--sch-green);
+  }
+  
+  /* Výběr sloupců */
+  
+  #pckDtbSearchRoot .pck-columns-wrap {
+    position: relative;
+  }
+  
+  #pckDtbSearchRoot .pck-columns-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 20;
+    width: 300px;
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+    border-top: 2px solid var(--sch-green);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  #pckDtbSearchRoot .pck-columns-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sch-grey-text);
+    border-bottom: 1px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot .pck-columns-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sch-green-dark);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  
+  #pckDtbSearchRoot .pck-columns-toggle input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--sch-green);
+    cursor: pointer;
+  }
+  
+  #pckDtbSearchRoot .pck-columns-list {
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  
+  #pckDtbSearchRoot .pck-col-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  
+  #pckDtbSearchRoot .pck-col-option:hover {
+    background: var(--sch-green-tint);
+  }
+  
+  #pckDtbSearchRoot .pck-col-option input {
+    accent-color: var(--sch-green);
+    flex: 0 0 auto;
+  }
+  
+  /* Focus */
+  
+  #pckDtbSearchRoot :focus-visible,
+  .pck-drawer :focus-visible {
+    outline: 2px solid var(--sch-green);
+    outline-offset: 1px;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Tabulka
+     --------------------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot .pck-table-container {
+    overflow: auto;
+    max-height: calc(100vh - 300px);
+    border: 1px solid var(--sch-grey-line);
+    background: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot .pck-table-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  #pckDtbSearchRoot .pck-table-container::-webkit-scrollbar-track {
+    background: var(--sch-grey-bg);
+  }
+  
+  #pckDtbSearchRoot .pck-table-container::-webkit-scrollbar-thumb {
+    background: #b9bdb9;
+    border: 3px solid var(--sch-grey-bg);
+    border-radius: 6px;
+  }
+  
+  #pckDtbSearchRoot .pck-table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--sch-green);
+  }
+  
+  #pckDtbSearchRoot #pck-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
+    min-width: 100%;
+    font-size: 0.82rem;
+  }
+  
+  /* Záhlaví -------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot #pck-table thead th {
+    position: sticky;
+    z-index: 3;
+    text-align: center;
+    vertical-align: bottom;
+  }
+  
+  #pckDtbSearchRoot #pck-header-row th {
+    top: 0;
+    height: var(--pck-head-h);
+    padding: 0;
+    background: var(--sch-white);
+    white-space: nowrap;
+    box-shadow:
+      inset -1px 0 0 var(--sch-grey-line),
+      inset 0 -2px 0 var(--sch-green);
+  }
+  
+  #pckDtbSearchRoot .pck-sort-btn {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+    padding: 6px 10px 8px;
+    text-align: center;
+    color: var(--sch-anthracite);
+    background: transparent;
+    border: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+  
+  #pckDtbSearchRoot .pck-sort-btn:hover {
+    background: var(--sch-green-tint);
+    color: var(--sch-green-dark);
+  }
+  
+  #pckDtbSearchRoot .pck-sort-btn.is-sorted {
+    color: var(--sch-green-dark);
+    background: var(--sch-green-tint);
+  }
+  
+  #pckDtbSearchRoot .pck-sort-arrow {
+    flex: 0 0 auto;
+    font-size: 0.85rem;
+    opacity: 0.35;
+  }
+  
+  #pckDtbSearchRoot .pck-sort-btn:hover .pck-sort-arrow,
+  #pckDtbSearchRoot .pck-sort-btn.is-sorted .pck-sort-arrow {
+    opacity: 1;
+  }
+  
+  /* Sloupec Actions v hlavičce nemá tlačítko */
+  #pckDtbSearchRoot #pck-header-row th:not(:has(.pck-sort-btn)) {
+    padding: 6px 10px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  
+  /* Filtry ---------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot #pck-filter-row th {
+    top: var(--pck-head-h);
+    padding: 6px;
+    background: var(--sch-grey-bg);
+    box-shadow:
+      inset -1px 0 0 var(--sch-grey-line),
+      inset 0 -1px 0 var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot .pck-filter-input {
+    width: 100%;
+    min-width: 90px;
+    box-sizing: border-box;
+    padding: 5px 7px;
+    font-size: 0.78rem;
+    color: var(--sch-anthracite);
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot .pck-filter-input:focus {
+    outline: none;
+    border-color: var(--sch-green);
+    box-shadow: 0 0 0 2px rgba(0, 137, 61, 0.18);
+  }
+  
+  #pckDtbSearchRoot .pck-filter-input:not(:placeholder-shown) {
+    border-color: var(--sch-green);
+    background: var(--sch-green-tint);
+    font-weight: 600;
+  }
+  
+  /* Tělo ------------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot #pck-body td {
+    padding: 7px 12px;
+    border-right: 1px solid #eceeeb;
+    border-bottom: 1px solid var(--sch-grey-line);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot #pck-body tr {
+    cursor: pointer;
+  }
+  
+  #pckDtbSearchRoot #pck-body tr:nth-child(even) td {
+    background: var(--sch-grey-bg);
+  }
+  
+  #pckDtbSearchRoot #pck-body tr:hover td {
+    background: var(--sch-green-tint);
+  }
+  
+  /* Aktivně řazený sloupec je jemně zvýrazněný */
+  #pckDtbSearchRoot #pck-body td.is-sorted {
+    font-weight: 600;
+  }
+  
+  #pckDtbSearchRoot .pck-message {
+    padding: 36px 16px !important;
+    text-align: center;
+    color: var(--sch-grey-text);
+    background: var(--sch-white) !important;
+    white-space: normal !important;
+    cursor: default;
+  }
+  
+  #pckDtbSearchRoot #pck-body a {
+    color: var(--sch-green-dark);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 137, 61, 0.35);
+  }
+  
+  #pckDtbSearchRoot #pck-body a:hover {
+    border-bottom-color: var(--sch-green);
+  }
+  
+  /* Zmrazené sloupce vlevo -------------------------------------------------- */
+  
+  #pckDtbSearchRoot .pck-sticky-col {
+    position: sticky;
+  }
+  
+  /* Selektory musí mít vyšší specificitu než `#pckDtbSearchRoot #pck-table thead th`,
+     jinak by zmrazené buňky záhlaví zůstaly na stejné vrstvě jako ostatní
+     a sousední sloupce by je při vodorovném scrollu překryly. */
+  #pckDtbSearchRoot #pck-table thead th.pck-sticky-col {
+    position: sticky;
+    z-index: 6;
+  }
+  
+  #pckDtbSearchRoot #pck-table tbody td.pck-sticky-col {
+    position: sticky;
+    z-index: 2;
+  }
+  
+  #pckDtbSearchRoot .pck-sticky-last {
+    border-right: 2px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot #pck-header-row th.pck-sticky-last {
+    box-shadow:
+      inset -2px 0 0 var(--sch-grey-line),
+      inset 0 -2px 0 var(--sch-green);
+  }
+  
+  #pckDtbSearchRoot #pck-filter-row th.pck-sticky-last {
+    box-shadow:
+      inset -2px 0 0 var(--sch-grey-line),
+      inset 0 -1px 0 var(--sch-grey-line);
+  }
+  
+  /* Tlačítka v buňkách ----------------------------------------------------- */
+  
+  #pckDtbSearchRoot .psds-button,
+  #pckDtbSearchRoot .btn-edit,
+  #pckDtbSearchRoot .btn-delete,
+  #pckDtbSearchRoot .btn-copy {
+    padding: 3px 10px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+    border-radius: var(--pck-radius);
+  }
+  
+  #pckDtbSearchRoot .psds-button {
+    border-color: var(--sch-green);
+    color: var(--sch-green-dark);
+  }
+  
+  #pckDtbSearchRoot .psds-button:hover,
+  #pckDtbSearchRoot .btn-edit:hover,
+  #pckDtbSearchRoot .btn-copy:hover {
+    background: var(--sch-green);
+    border-color: var(--sch-green);
+    color: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot .btn-edit,
+  #pckDtbSearchRoot .btn-copy {
+    margin-right: 4px;
+    color: var(--sch-anthracite);
+  }
+  
+  #pckDtbSearchRoot .btn-delete {
+    color: var(--sch-red);
+  }
+  
+  #pckDtbSearchRoot .btn-delete:hover {
+    background: var(--sch-red);
+    border-color: var(--sch-red);
+    color: var(--sch-white);
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Stránkování
+     --------------------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot .pck-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 14px 0 20px;
+    font-size: 0.85rem;
+  }
+  
+  #pckDtbSearchRoot .pck-pagination button {
+    padding: 7px 16px;
+    font-weight: 600;
+    color: var(--sch-anthracite);
+    background: var(--sch-white);
+    border: 1px solid var(--sch-grey-line);
+  }
+  
+  #pckDtbSearchRoot .pck-pagination button:hover:not(:disabled) {
+    background: var(--sch-green);
+    border-color: var(--sch-green);
+    color: var(--sch-white);
+  }
+  
+  #pckDtbSearchRoot .pck-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  #pckDtbSearchRoot #pck-page-info {
+    min-width: 180px;
+    text-align: center;
+    color: var(--sch-grey-text);
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Označování řádků
+     --------------------------------------------------------------------------- */
+  
+  #pckDtbSearchRoot .pck-selection-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: -1px;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--sch-green-dark);
+    background: var(--sch-green-tint);
+    border: 1px solid var(--sch-green);
+    border-bottom: 0;
+  }
+  
+  #pckDtbSearchRoot .pck-select {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: var(--sch-green);
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  
+  #pckDtbSearchRoot #pck-header-row th[data-column="Select"],
+  #pckDtbSearchRoot #pck-body td:has(> .pck-select) {
+    padding: 6px 10px;
+    width: 1%;
+  }
+  
+  #pckDtbSearchRoot #pck-body tr.is-selected td {
+    background: #dcecdf;
+  }
+  
+  #pckDtbSearchRoot #pck-body tr.is-selected:hover td {
+    background: #cfe4d4;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Detail řádku (boční panel)
+     --------------------------------------------------------------------------- */
+  
+  .pck-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    font-family: "Frutiger", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #3c3c3b;
+  }
+  
+  .pck-drawer[hidden] {
+    display: none;
+  }
+  
+  .pck-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(60, 60, 59, 0.45);
+    animation: pck-fade 0.15s ease;
+  }
+  
+  .pck-drawer-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    width: min(760px, 96vw);
+    height: 100%;
+    background: #fff;
+    border-left: 3px solid #00893d;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+    animation: pck-slide 0.18s ease;
+  }
+  
+  .pck-drawer-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #d7d9d6;
+  }
+  
+  .pck-drawer-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  
+  .pck-drawer-tools {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pck-drawer-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #006c30;
+    background: #fff;
+    border: 1px solid #00893d;
+    border-radius: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  
+  .pck-drawer-copy:hover,
+  .pck-drawer-copy.is-copied {
+    background: #00893d;
+    color: #fff;
+  }
+  
+  .pck-drawer-close {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #6b6f6c;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  
+  .pck-drawer-close:hover {
+    color: #00893d;
+    border-color: #00893d;
+  }
+  
+  .pck-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px 24px 32px;
+  }
+  
+  /* Kategorie ---------------------------------------------------------------- */
+  
+  .pck-group {
+    padding-top: 16px;
+  }
+  
+  .pck-group + .pck-group {
+    margin-top: 4px;
+    border-top: 1px solid #eceeeb;
+  }
+  
+  .pck-group-title {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    padding: 4px 0 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #00893d;
+    background: #fff;
+    box-shadow: inset 0 -1px 0 #d7d9d6;
+  }
+  
+  .pck-group-count {
+    padding: 1px 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: #006c30;
+    background: #e8f3ec;
+    border-radius: 2px;
+  }
+  
+  /* Pole --------------------------------------------------------------------- */
+  
+  .pck-group-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 16px;
+  }
+  
+  .pck-field {
+    min-width: 0;
+    padding: 5px 0;
+    border-bottom: 1px solid #f2f3f1;
+  }
+  
+  .pck-field-wide {
+    grid-column: 1 / -1;
+  }
+  
+  .pck-field-label {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8b8f8c;
+    line-height: 1.3;
+  }
+  
+  .pck-field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 20px;
+  }
+  
+  .pck-field-value {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  
+  /* Kopírování jednotlivé hodnoty – ikona se objeví při najetí */
+  .pck-copy-field {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    color: #8b8f8c;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  }
+  
+  .pck-field:hover .pck-copy-field,
+  .pck-copy-field:focus-visible,
+  .pck-copy-field.is-copied {
+    opacity: 1;
+  }
+  
+  .pck-copy-field:hover,
+  .pck-copy-field.is-copied {
+    color: #00893d;
+    border-color: #00893d;
+  }
+  
+  /* PSDS a odkazy uvnitř panelu */
+  .pck-drawer-body .psds-button {
+    padding: 2px 10px;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #006c30;
+    background: #fff;
+    border: 1px solid #00893d;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  
+  .pck-drawer-body .psds-button:hover {
+    background: #00893d;
+    color: #fff;
+  }
+  
+  .pck-drawer-body a {
+    color: #006c30;
+    overflow-wrap: anywhere;
+  }
+  
+  body.pck-drawer-open {
+    overflow: hidden;
+  }
+  
+  @keyframes pck-fade {
+    from { opacity: 0; }
+  }
+  
+  @keyframes pck-slide {
+    from { transform: translateX(24px); opacity: 0; }
+  }
+  
+  /* ---------------------------------------------------------------------------
+     Responzivita, přístupnost, tisk
+     --------------------------------------------------------------------------- */
+  
+  @media (max-width: 1100px) {
+    #pckDtbSearchRoot {
+      padding: 16px;
+    }
+  
+    #pckDtbSearchRoot #subPageHeader {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    #pckDtbSearchRoot .pck-global-search {
+      width: 180px;
+    }
+  
+    #pckDtbSearchRoot .pck-table-container {
+      max-height: calc(100vh - 360px);
+    }
+  
+    .pck-group-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    #pckDtbSearchRoot *,
+    .pck-drawer * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+  
+  @media print {
+    #pckDtbSearchRoot .pck-controls,
+    #pckDtbSearchRoot .pck-pagination,
+    #pckDtbSearchRoot #pck-filter-row,
+    .pck-drawer {
+      display: none !important;
+    }
+  
+    #pckDtbSearchRoot .pck-table-container {
+      max-height: none;
+      overflow: visible;
+      border: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------------------
+     Detail záznamu — kategorie v levém sloupci (stejně jako panel se záznamem)
+     --------------------------------------------------------------------------- */
+
+  .pck-drawer-body {
+    display: flex;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .pck-detail-nav {
+    display: flex;
+    flex: 0 0 158px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 16px 8px;
+    background: var(--sch-grey-bg);
+    border-right: 1px solid var(--sch-grey-line);
+    overflow-y: auto;
+  }
+
+  .pck-detail-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    color: var(--sch-grey-text);
+    background: none;
+    border: none;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease,
+      border-color 0.12s ease;
+  }
+
+  .pck-detail-nav-item:hover {
+    color: var(--sch-anthracite);
+  }
+
+  .pck-detail-nav-item.active {
+    color: var(--sch-anthracite);
+    background: var(--sch-white);
+    border-left-color: var(--sch-green);
+  }
+
+  .pck-detail-nav-item:focus-visible {
+    outline: 2px solid var(--sch-green);
+    outline-offset: -2px;
+  }
+
+  .pck-detail-nav-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pck-detail-nav-count {
+    flex: none;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--sch-grey-text);
+  }
+
+  /* Kompletně vyplněná kategorie — stejný signál jako v panelu se záznamem. */
+  .pck-detail-nav-count.is-complete {
+    color: var(--sch-green);
+  }
+
+  /* Pravý sloupec je jediné, co scrolluje. */
+  .pck-detail-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-y: auto;
+    padding: 4px 24px 32px;
+    scroll-behavior: smooth;
+  }
+
+  @media (max-width: 700px) {
+    .pck-drawer-body {
+      flex-direction: column;
+    }
+
+    .pck-detail-nav {
+      flex: 0 0 auto;
+      flex-direction: row;
+      overflow-x: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--sch-grey-line);
+    }
+
+    .pck-detail-nav-item {
+      border-left: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .pck-detail-nav-item.active {
+      border-bottom-color: var(--sch-green);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pck-detail-content {
+      scroll-behavior: auto;
+    }
+  }
+
+  @media print {
+    .pck-detail-nav {
+      display: none;
+    }
+  }
+

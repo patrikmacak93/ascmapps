@@ -82,7 +82,7 @@
   /* ============================================================
      Sekce dlaždic
      ============================================================ */
-  main { padding: 34px 0 72px; }
+  main { padding: 10px 0 10px; }
 
   .section-head {
     display: flex; align-items: baseline; justify-content: space-between;

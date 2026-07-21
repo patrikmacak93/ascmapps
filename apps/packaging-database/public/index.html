@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="homepage.css">
-<title>SCM Reporting – rozcestník</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../../homepage.css">
+    <title>Packaging Database</title>
 </head>
-
 <body>
 
   <!-- horní lišta -->
@@ -18,11 +17,18 @@
     </div>
   </div>
 
-  <!-- nadpis stránky (bez baneru) -->
+  <!-- nadpis stránky -->
   <div class="page-head">
     <div class="wrap">
-      <h1>SCM Reporting</h1>
-      <p>Rozcestník reportovacích aplikací dodavatelského řetězce.</p>
+      <a class="btn-back" href="../../../index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6"/>
+        </svg>
+        Zpět na rozcestník
+      </a>
+      <h1>Databáze obalů</h1>
+      <p>Vyber, zda chceš prohlížet již vytvořené záznamy, nebo záznamy přidávat / upravovat.</p>
     </div>
   </div>
 
@@ -30,7 +36,7 @@
   <main>
     <div class="wrap">
       <div class="section-head">
-        <h2>Aplikace</h2>
+        <h2>Rozcestník</h2>
         <span class="count" id="appCount"></span>
       </div>
       <div class="grid" id="grid"></div>
@@ -44,38 +50,37 @@
     </div>
   </footer>
 
-<script>
+  <script>
   /* ============================================================
      SEZNAM APLIKACÍ
-     Přidání nové appky = jeden objekt do pole níže.
        name   – název na dlaždici
        tag    – kategorie (malý zelený nadpis)
-       desc   – jednořádkový popis
-       url    – kam tlačítko vede (uprav dle nasazení na IIS)
-       icon   – klíč ikony: "box" | "chart" | "table" | "truck" | "cog"
+       desc   – popis
+       url    – kam tlačítko vede
+       icon   – "box" | "chart" | "table" | "truck" | "cog"
        soon   – true = dlaždice "Připravujeme" (nejde kliknout)
+       login  – true = jen poznámka na dlaždici; přihlášení
+                řeší cílová stránka sama (pck-auth.js + /login API)
      ============================================================ */
   const APPS = [
     {
-      name: "Packaging Forecast",
-      tag:  "Řízení obalů",
-      desc: "Zůstatky poolu (PckPoolBalance), simulace poolu, potřeby materiálu a obalů, Pareto přehledy.",
-      url:  "/packagingForecast/",            // ← uprav podle reálné cesty na serveru
-      icon: "box"
+      name: "Prohlížení záznamů",
+      tag:  "Reporting",
+      desc: "V této sekci nalezneš všechny doposud vytvořené záznamy v tabulkové formě s možností exportu do Excelu a zobrazení PSDS dokumentu.",
+      url:  "pckDtbSearch.html",
+      icon: "chart"
     },
-
-    // --- příklady připravovaných dlaždic – nahraď nebo smaž ---
     {
-      name: "Databáze dodavatelských obalů",
+      name: "Přidávání / úprava záznamů",
       tag:  "Vývoj obalů",
-      desc: "Přehled obalových konceptů s odkazy na PSDS",
-      url:  "/packagingDatabase/",            // ← uprav podle reálné cesty na serveru (IIS aplikace)
+      desc: "Přidání nového obalového konceptu, úprava nebo smazání stávajícího.",
+      url:  "pckDtbEdit.html",
       icon: "table",
-      soon: false
+      login: true
     }
   ];
 
-  /* ---- ikony (jednoduché linkové SVG, bez značkové grafiky) ---- */
+  /* ---- ikony ---- */
   const ICONS = {
     box:   '<path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
     chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
@@ -91,17 +96,20 @@
          + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
   }
 
+  /* ---- vykreslení dlaždice ---- */
   function tileHtml(app) {
     const inner =
       '<div class="tile-icon">' + iconSvg(app.icon) + '</div>' +
-      '<div class="tile-eyebrow">' + app.tag + '</div>' +
+      '<div class="tile-eyebrow">' + (app.tag || '') + '</div>' +
       '<h3 class="tile-name">' + app.name + '</h3>' +
-      '<p class="tile-desc">' + app.desc + '</p>';
+      '<p class="tile-desc">' + app.desc + '</p>' +
+      (app.login ? '<p class="tile-note">Vyžaduje přihlášení</p>' : '');
 
     if (app.soon) {
       return '<div class="tile tile-soon">' +
              '<span class="badge-soon">Připravujeme</span>' + inner + '</div>';
     }
+
     return '<a class="tile" href="' + app.url + '" aria-label="Otevřít – ' + app.name + '">' +
            inner +
            '<span class="tile-go">Otevřít' +
@@ -110,14 +118,17 @@
            '</span></a>';
   }
 
+  /* ---- render ---- */
   const grid = document.getElementById("grid");
   grid.innerHTML = APPS.map(tileHtml).join("");
 
   const live = APPS.filter(a => !a.soon).length;
   document.getElementById("appCount").textContent =
-    live + (live === 1 ? " aktivní aplikace" : live >= 2 && live <= 4 ? " aktivní aplikace" : " aktivních aplikací");
+    live + (live === 1 ? " aktivní odkaz" : live <= 4 ? " aktivní odkazy" : " aktivních odkazů");
 
   document.getElementById("year").textContent = new Date().getFullYear();
-</script>
+  </script>
+
 </body>
 </html>
+

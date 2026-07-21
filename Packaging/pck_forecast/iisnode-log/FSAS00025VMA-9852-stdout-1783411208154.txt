@@ -1,1 +1,0 @@
-API běží na http://localhost:\\.\pipe\bd614691-2c2e-42e5-9d36-6089bb76bac1

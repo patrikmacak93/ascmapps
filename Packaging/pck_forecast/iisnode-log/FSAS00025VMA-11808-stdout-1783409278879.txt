@@ -1,2 +1,0 @@
-API běží na http://localhost:\\.\pipe\f3995fc6-3c99-4cc4-baeb-4bfbf6a508cb
-LOAD_SOURCE OK | durationMs=47284
