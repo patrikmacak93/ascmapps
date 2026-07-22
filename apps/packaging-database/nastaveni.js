@@ -29,15 +29,14 @@ module.exports = {
   // Adresa sql-connectoru + jeho API klíč. Stejné hodnoty jako
   // v Packaging/pck_forecast/server/nastaveni.js.
   SQL_CONNECTOR_URL:
-    process.env.PCK_SQL_CONNECTOR_BASE ||
-    "http://fsas00025vma.vt1.vitesco.com:4000/api/v1",
+    process.env.PCK_SQL_CONNECTOR_BASE,
   SQL_CONNECTOR_API_KEY:
-    process.env.PCK_SQL_CONNECTOR_API_KEY || "ZDE_DOPLNIT_API_KLIC",
+    process.env.PCK_SQL_CONNECTOR_API_KEY,
 
   // ---- PSDS dokumenty ----
   // Adresář na disku serveru, kam se ukládají nahrané PSDS soubory.
   // Původně to řešil Node-RED file node (D:\PSDS\).
-  PSDS_DIR: process.env.PCK_PSDS_DIR || "D:\\PSDS",
+  PSDS_DIR: process.env.PCK_PSDS_DIR,
 
   // Veřejná adresa, pod kterou jsou ty soubory dostupné z prohlížeče.
   // Tahle hodnota se ukládá do sloupce URL1 v databázi, takže ji neměň

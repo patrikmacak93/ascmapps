@@ -20,9 +20,9 @@ module.exports = {
   // portu, uprav tuhle adresu (nebo nastav proměnnou prostředí
   // PCK_SHARED_API_BASE).
   SQL_CONNECTOR_URL:
-    process.env.PCK_SQL_CONNECTOR_BASE || "http://fsas00025vma.vt1.vitesco.com:4000/api/v1",
+    process.env.PCK_SQL_CONNECTOR_BASE,
   SQL_CONNECTOR_API_KEY:
-    process.env.PCK_SQL_CONNECTOR_API_KEY || "bcc485148f97728f7f7468410cf23e591b94dab0c2fa1fb3717138f952f2d507",
+    process.env.PCK_SQL_CONNECTOR_API_KEY,
 
   // ---- Import dat z Excelu (tlačítko "Načíst data") ----
   // PYTHON_PATH - úplná cesta k python.exe NA SERVERU, kde běží
@@ -32,10 +32,10 @@ module.exports = {
   //   uživatelský profil a pod jiným účtem (např. pod tím, co má
   //   přístup do SQL) se vůbec nespustí. Použij klasickou instalaci
   //   z python.org s volbou "Install for all users".
-  PYTHON_PATH: process.env.PCK_PYTHON_PATH || "C:\\Program Files\\Python313\\python.exe",
+  PYTHON_PATH: process.env.PCK_PYTHON_PATH,
 
   // SCRIPT_PATH - úplná cesta k load_query1_to_sql.py na serveru.
-  SCRIPT_PATH: process.env.PCK_SCRIPT_PATH || "D:\\ASCM_apps\\Packaging\\pck_forecast\\load_query1_to_sql.py",
+  SCRIPT_PATH: process.env.PCK_SCRIPT_PATH,
 
   // Max. doba běhu importního skriptu, než ho appka násilně ukončí (ms).
   IMPORT_TIMEOUT_MS: 5 * 60 * 1000
