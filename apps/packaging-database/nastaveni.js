@@ -24,14 +24,14 @@ const path = require("path");
 module.exports = {
   // Na jakém portu poslouchá TENTO backend (při ručním spuštění
   // `node server.js`; pod IIS/iisnode port řeší iisnode sám).
-  PORT: process.env.PORT || 3100,
+  PORT: process.env.PORT,
 
   // Adresa sql-connectoru + jeho API klíč. Stejné hodnoty jako
   // v Packaging/pck_forecast/server/nastaveni.js.
   SQL_CONNECTOR_URL:
     process.env.PCK_SQL_CONNECTOR_BASE,
   SQL_CONNECTOR_API_KEY:
-    process.env.PCK_SQL_CONNECTOR_API_KEY,
+    process.env.API_KEY,
 
   // ---- PSDS dokumenty ----
   // Adresář na disku serveru, kam se ukládají nahrané PSDS soubory.
