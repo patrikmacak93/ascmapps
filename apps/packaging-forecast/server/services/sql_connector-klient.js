@@ -1,6 +1,6 @@
 "use strict";
 
-const { SQL_CONNECTOR_URL, SQL_CONNECTOR_API_KEY } = require("./nastaveni");
+const { SQL_CONNECTOR_URL, SQL_CONNECTOR_API_KEY } = require("../config");
 
 async function volatConnector(cesta, { method = "GET", query, body } = {}) {
   let url = `${SQL_CONNECTOR_URL}${cesta}`;

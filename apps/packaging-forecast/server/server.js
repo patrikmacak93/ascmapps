@@ -19,8 +19,8 @@ const cors = require("cors");
 const compression = require("compression");
 const path = require("path");
 
-const nastaveni = require("./server/nastaveni");
-const apiRoutes = require("./server/api-routes");
+const nastaveni = require("./config");
+const apiRoutes = require("./routes");
 
 const app = express();
 
@@ -33,7 +33,7 @@ app.use(compression());
 app.use("/api", apiRoutes);
 
 // Statické soubory appky (HTML/CSS/JS) - viz public/index.html
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.listen(nastaveni.PORT, () => {
   console.log(`API běží na http://localhost:${nastaveni.PORT}`);

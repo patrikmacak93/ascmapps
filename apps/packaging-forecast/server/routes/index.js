@@ -27,15 +27,15 @@ const express = require("express");
 const path = require("path");
 const { execFile } = require("child_process");
 
-const nastaveni = require("./nastaveni");
-const {volatConnector} = require('./sql_connector-klient')
+const config = require("./config");
+const {volatConnector} = require('./services/sql_connector-klient')
 const {
   cacheGet,
   cacheSet,
   cacheInvalidate,
   odeslatJsonSEtag,
   sestavitPivotTabulku
-} = require("./pomocne-funkce");
+} = require("./utils/helper");
 const { convertProcessSignalToExitCode } = require("util");
 
 const router = express.Router();
@@ -253,12 +253,12 @@ router.post("/load-source", async (req, res) => {
   const zacatek = Date.now();
 
   const child = execFile(
-    nastaveni.PYTHON_PATH,
-    [nastaveni.SCRIPT_PATH],
+    config.PYTHON_PATH,
+    [config.SCRIPT_PATH],
     {
-      timeout: nastaveni.IMPORT_TIMEOUT_MS,
+      timeout: config.IMPORT_TIMEOUT_MS,
       windowsHide: true,
-      cwd: path.dirname(nastaveni.SCRIPT_PATH),
+      cwd: path.dirname(config.SCRIPT_PATH),
       maxBuffer: 10 * 1024 * 1024
     },
     (error, stdout, stderr) => {
@@ -293,7 +293,7 @@ router.post("/load-source", async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({
         ok: false,
-        error: "Nepodařilo se spustit Python skript. Zkontrolujte cestu k python.exe v server/nastaveni.js.",
+        error: "Nepodařilo se spustit Python skript. Zkontrolujte cestu k python.exe v server/config.js.",
         detail: err.message
       });
     }

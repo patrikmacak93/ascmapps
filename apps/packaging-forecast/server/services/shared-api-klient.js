@@ -16,7 +16,7 @@
 
 "use strict";
 
-const { SHARED_API_URL } = require("./nastaveni");
+const { SHARED_API_URL } = require("../config");
 
 /**
  * Spustí SQL dotaz na shared-api a vrátí { rows, rowsAffected }.

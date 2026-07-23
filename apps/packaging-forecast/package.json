@@ -3,12 +3,12 @@
   "version": "2.0.0",
   "private": true,
   "description": "Packaging pool management dashboard - Express API (data čte/zapisuje přes ASCM shared-api) + statický frontend",
-  "main": "server.js",
+  "main": "server/server.js",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "compression": "^1.7.4",
