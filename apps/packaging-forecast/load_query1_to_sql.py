@@ -12,7 +12,7 @@ from sqlalchemy import create_engine, text
 # =========================
 # CONFIG
 # =========================
-LOG = r"D:\ASCM_apps\Packaging\pck_forecast\sql_upload.log"
+LOG = r"D:\ASCM_apps\logs\sql_upload.log"
 MAX_LOG_LINES = 14
 FALLBACK_LOG = os.path.join(tempfile.gettempdir(), "sql_upload.log")
 
@@ -55,7 +55,7 @@ def log(msg: str) -> None:
         with open(LOG, "a", encoding="utf-8") as f:
             f.write(line)
         _trim_log_file(LOG)
-    except PermissionError:
+    except OSError:
         with open(FALLBACK_LOG, "a", encoding="utf-8") as f:
             f.write(line)
         _trim_log_file(FALLBACK_LOG)

@@ -51,7 +51,7 @@ export function parseRequirementPeriodSortKey(label) {
    sedět s CN v certifikátu: fsas00025vma.vt1.vitesco.com) - IP
    adresa by prohlížeč s certifikátem odmítl.
 --------------------------------------------------------- */
-const API_BASE = "https://fsas00025vma.vt1.vitesco.com:3443/api";
+const API_BASE = "packagingForecast/api";
 
 export const apiUrl = `${API_BASE}/pckpoolbalance`;
 export const weeklyOverviewUrl = `${API_BASE}/weekly-overview`;

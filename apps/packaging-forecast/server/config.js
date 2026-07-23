@@ -22,7 +22,7 @@ module.exports = {
   SQL_CONNECTOR_URL:
     process.env.PCK_SQL_CONNECTOR_BASE,
   SQL_CONNECTOR_API_KEY:
-    process.env.PCK_SQL_CONNECTOR_API_KEY,
+    process.env.API_KEY,
 
   // ---- Import dat z Excelu (tlačítko "Načíst data") ----
   // PYTHON_PATH - úplná cesta k python.exe NA SERVERU, kde běží
