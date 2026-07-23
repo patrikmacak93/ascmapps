@@ -27,15 +27,15 @@ const express = require("express");
 const path = require("path");
 const { execFile } = require("child_process");
 
-const config = require("./config");
-const {volatConnector} = require('./services/sql_connector-klient')
+const config = require("../config");
+const {volatConnector} = require('../services/sql_connector-klient')
 const {
   cacheGet,
   cacheSet,
   cacheInvalidate,
   odeslatJsonSEtag,
   sestavitPivotTabulku
-} = require("./utils/helper");
+} = require("../utils/helper");
 const { convertProcessSignalToExitCode } = require("util");
 
 const router = express.Router();

@@ -6,7 +6,7 @@
   1. sestaví webový server (Express),
   2. napojí na něj všechny routy z server/api-routes.js,
   3. servíruje statické soubory appky (HTML/CSS/JS z public/),
-  4. spustí naslouchání na portu z server/nastaveni.js.
+  4. spustí naslouchání na portu z server/config.js.
 
   Když appku spouštíš, spouštíš vlastně tenhle soubor:
     node server.js
@@ -19,7 +19,7 @@ const cors = require("cors");
 const compression = require("compression");
 const path = require("path");
 
-const nastaveni = require("./config");
+const config = require("./config");
 const apiRoutes = require("./routes");
 
 const app = express();
@@ -35,6 +35,6 @@ app.use("/api", apiRoutes);
 // Statické soubory appky (HTML/CSS/JS) - viz public/index.html
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-app.listen(nastaveni.PORT, () => {
-  console.log(`API běží na http://localhost:${nastaveni.PORT}`);
+app.listen(config.PORT, () => {
+  console.log(`API běží na http://localhost:${config.PORT}`);
 });
