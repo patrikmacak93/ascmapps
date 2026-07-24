@@ -25,8 +25,8 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-const nastaveni = require("./nastaveni");
-const { volatConnector } = require("./sql_connector-klient");
+const config = require("../config");
+const { volatConnector } = require("../../services/sql_connector-klient");
 
 const router = express.Router();
 
@@ -142,7 +142,7 @@ router.delete("/pck-database/:id", async (req, res) => {
 /* ===========================================================
    POST /psds  (dřív POST /upload-psds)
    -----------------------------------------------------------
-   Uloží nahraný soubor do nastaveni.PSDS_DIR a vrátí { url }.
+   Uloží nahraný soubor do config.PSDS_DIR a vrátí { url }.
    Tu URL si formulář schová do skrytého pole URL1 a uloží ji
    se záznamem — do databáze se tedy ukládá jen odkaz, ne soubor.
 =========================================================== */
@@ -165,7 +165,7 @@ function bezpecnyNazev(puvodni) {
 
 const uloziste = multer.diskStorage({
   destination(req, file, cb) {
-    fs.mkdir(nastaveni.PSDS_DIR, { recursive: true }, (err) => cb(err, nastaveni.PSDS_DIR));
+    fs.mkdir(config.PSDS_DIR, { recursive: true }, (err) => cb(err, config.PSDS_DIR));
   },
   filename(req, file, cb) {
     let nazev = bezpecnyNazev(file.originalname);
@@ -173,7 +173,7 @@ const uloziste = multer.diskStorage({
     // Node-RED soubor se stejným jménem přepisoval — což tiše zabilo
     // PSDS jiného záznamu, pokud dva lidi nahráli soubor stejného jména.
     // Při kolizi proto přidáme časové razítko.
-    if (fs.existsSync(path.join(nastaveni.PSDS_DIR, nazev))) {
+    if (fs.existsSync(path.join(config.PSDS_DIR, nazev))) {
       const pripona = path.extname(nazev);
       const jmeno = path.basename(nazev, pripona);
       nazev = `${jmeno}_${Date.now()}${pripona}`;
@@ -185,10 +185,10 @@ const uloziste = multer.diskStorage({
 
 const upload = multer({
   storage: uloziste,
-  limits: { fileSize: nastaveni.PSDS_MAX_BYTES, files: 1 },
+  limits: { fileSize: config.PSDS_MAX_BYTES, files: 1 },
   fileFilter(req, file, cb) {
     const pripona = path.extname(file.originalname || "").toLowerCase();
-    if (!nastaveni.PSDS_POVOLENE_PRIPONY.includes(pripona)) {
+    if (!config.PSDS_POVOLENE_PRIPONY.includes(pripona)) {
       return cb(new Error(`Nepovolený typ souboru (${pripona || "bez přípony"}).`));
     }
     cb(null, true);
@@ -206,9 +206,9 @@ const upload = multer({
  * (pck-edit-form.js), který svou vlastní adresu zná spolehlivě.
  */
 function verejnaUrl(nazevSouboru) {
-  if (!nastaveni.PSDS_PUBLIC_BASE) return null;
+  if (!config.PSDS_PUBLIC_BASE) return null;
 
-  const zaklad = nastaveni.PSDS_PUBLIC_BASE.replace(/\/+$/, "");
+  const zaklad = config.PSDS_PUBLIC_BASE.replace(/\/+$/, "");
   return `${zaklad}/${encodeURIComponent(nazevSouboru)}`;
 }
 
@@ -239,10 +239,10 @@ router.get("/psds/:soubor", (req, res) => {
   // path.basename zahodí jakékoliv "../" — jinak by šlo přes odkaz
   // sáhnout kamkoliv na disk serveru.
   const nazev = path.basename(req.params.soubor);
-  const cesta = path.join(nastaveni.PSDS_DIR, nazev);
+  const cesta = path.join(config.PSDS_DIR, nazev);
 
   // Druhá pojistka: výsledná cesta musí opravdu ležet v PSDS_DIR.
-  if (!path.resolve(cesta).startsWith(path.resolve(nastaveni.PSDS_DIR))) {
+  if (!path.resolve(cesta).startsWith(path.resolve(config.PSDS_DIR))) {
     return res.status(400).json({ error: "Neplatný název souboru." });
   }
 

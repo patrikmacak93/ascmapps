@@ -29,8 +29,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const nastaveni = require("./nastaveni");
-const apiRoutes = require("./api-routes");
+const nastaveni = require("./config");
+const apiRoutes = require("../routes");
 
 const app = express();
 
@@ -50,7 +50,7 @@ app.use("/api", apiRoutes);
 
 // Statické stránky appky (HTML/CSS/JS) z public/. Musí být AŽ za /api,
 // ať API routy mají přednost.
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.listen(nastaveni.PORT, () => {
   console.log(`API obalové databáze běží na http://localhost:${nastaveni.PORT}`);
