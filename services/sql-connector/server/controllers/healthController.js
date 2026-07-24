@@ -4,7 +4,7 @@
 // samotného connectoru — proto zůstává mimo /api/v1 a mimo ověření
 // API klíčem (monitoring nástroje/load balancer klíč mít nemusí).
 
-const { poolPromise } = require('../db');
+const { poolPromise } = require('../services/db');
 
 // GET /health
 // Jen potvrdí, že Express proces běží a odpovídá na požadavky.

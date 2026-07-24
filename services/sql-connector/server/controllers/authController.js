@@ -25,7 +25,7 @@
 
 'use strict';
 
-const { sql, poolPromise } = require('../db');
+const { sql, poolPromise } = require('../services/db');
 
 const TABULKA_UZIVATELE = '[FSTASCM].[dbo].[eBoard_users]';
 

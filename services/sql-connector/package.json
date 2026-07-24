@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Společný backend pro komunikaci se SQL databází.",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server/server.js",
     "dev": "nodemon server.js"
   },
   "keywords": [],

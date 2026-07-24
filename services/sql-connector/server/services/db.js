@@ -14,6 +14,7 @@
 
 require('dotenv').config();
 
+const config = require('../config');
 // POZOR: jiný require než dřív — msnodesqlv8 varianta mssql knihovny.
 const sql = require('mssql/msnodesqlv8');
 
@@ -22,11 +23,13 @@ const sql = require('mssql/msnodesqlv8');
 // žádné username/password se sem nepíše.
 const dbConfig = {
   connectionString:
-    `Driver={ODBC Driver 17 for SQL Server};` +
-    `Server=${process.env.DB_SERVER};` +
-    `Database=${process.env.DB_DATABASE};` +
+    `Driver={${config.ODBC_DRIVER}};` +
+    `Server=${config.DB_SERVER};` +
+    `Database=${config.DB_DATABASE};` +
     `Trusted_Connection=Yes;` +
     `TrustServerCertificate=Yes;`,
+  connectionTimeout: 15000,
+  requestTimeout: 15000,
   pool: {
     max: 10,
     min: 0,

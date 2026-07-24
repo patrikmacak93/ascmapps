@@ -1,4 +1,4 @@
-const { poolPromise } = require('../db.js');
+const { poolPromise } = require('../services/db');
 
 async function getAgvList(req, res, next) {
   try {

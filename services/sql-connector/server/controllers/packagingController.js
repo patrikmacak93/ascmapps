@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('../db');
+const { sql, poolPromise } = require('../services/db');
 
 async function getPackaging(req, res, next) {
   try {

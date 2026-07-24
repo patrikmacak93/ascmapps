@@ -9,6 +9,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 
+const config = require('./config')
 const logger = require('./utils/logger');
 const requestLogger = require('./middleware/requestLogger');
 const apiKeyAuth = require('./middleware/apiKeyAuth');
@@ -77,7 +78,7 @@ app.use('/api/v1', agvListRoutes);
 // pozice v řetězci middlewarů.
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+const PORT = config.PORT;
 
 app.listen(PORT, () => {
   logger.info(`Connector běží na http://localhost:${PORT}`);

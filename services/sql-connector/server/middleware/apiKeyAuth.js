@@ -8,6 +8,7 @@
 // middlewaru nebo rovnou k handleru v controlleru).
 // Pokud middleware sám pošle odpověď (res.status(...).json(...)),
 // řetězec se tam zastaví — handler v controlleru se už nezavolá.
+const config = require('../config');
 
 function apiKeyAuth(req, res, next) {
     // Klient posílá klíč v hlavičce "x-api-key".
@@ -17,7 +18,7 @@ function apiKeyAuth(req, res, next) {
     const providedKey = req.headers['x-api-key'];
   
     // Očekávaný klíč načtený z .env (nikdy napevno v kódu).
-    const expectedKey = process.env.API_KEY;
+    const expectedKey = config.API_KEY;
   
     // Pokud connector vůbec nemá API_KEY nastavený v .env,
     // je to chyba konfigurace serveru, ne klienta — nechceme,

@@ -1,4 +1,4 @@
-const { poolPromise } = require('../db');
+const { poolPromise } = require('../services/db');
 
 async function getProjects(req, res, next) {
   try {

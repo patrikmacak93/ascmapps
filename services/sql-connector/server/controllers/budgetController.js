@@ -2,7 +2,7 @@
 // Načte celý obsah view [FSTASCM].[pckForecast].[vw_budget].
 // Stejný vzor jako packagingController.js — vrací { count, data }.
 
-const { poolPromise } = require('../db');
+const { poolPromise } = require('../services/db');
 
 async function getBudget(req, res, next) {
   try {

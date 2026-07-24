@@ -14,7 +14,7 @@
 
 'use strict';
 
-const { sql, poolPromise } = require('../db');
+const { sql, poolPromise } = require('../services/db');
 const {
   TABULKA,
   SELECT_LIST,

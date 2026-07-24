@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('../db');
+const { sql, poolPromise } = require('../services/db');
 
 async function getParetoPotreba(req, res, next) {
   try {
