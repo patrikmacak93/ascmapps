@@ -26,7 +26,7 @@ const path = require("path");
 const fs = require("fs");
 
 const config = require("../config");
-const { volatConnector } = require("../services");
+const { volatConnector } = require("../services/sql_connector-klient");
 
 const router = express.Router();
 

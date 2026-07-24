@@ -30,7 +30,7 @@ const cors = require("cors");
 const path = require("path");
 
 const nastaveni = require("./config");
-const apiRoutes = require("../routes");
+const apiRoutes = require("./routes");
 
 const app = express();
 
