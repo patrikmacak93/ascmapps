@@ -101,7 +101,7 @@ router.get("/pareto", async (req, res) => {
 
     if (data === undefined) {
       const [potreba, nakoupeno] = await Promise.all([
-        volatConnector("/pareto/potreba",{ query: { period: obdovi } }),
+        volatConnector("/pareto/potreba",{ query: { period: obdobi } }),
         volatConnector("/pareto/nakoupeno")
       ]);
 
@@ -137,7 +137,7 @@ router.get("/projects", async (req, res) => {
 
     if (projects === undefined) {
       const vysledek = await volatConnector("/projects");
-      projects = vyskledek.data;
+      projects = vysledek.data;
       cacheSet("projects", projects, 300);
     }
 

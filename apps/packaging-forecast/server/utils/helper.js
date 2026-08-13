@@ -68,7 +68,7 @@ function odeslatJsonSEtag(req, res, data, cacheSeconds = 30) {
 function rozpoznatObdobi(label) {
   const s = String(label || "").trim();
 
-  let m = s.match(/cw\s*(\d{1,2})\.(\d{4})/i);
+  let m = s.match(/cw\s*(\d{1,2})\/(\d{4})/i);
   if (m) {
     const week = Number(m[1]);
     const year = Number(m[2]);
@@ -81,7 +81,7 @@ function rozpoznatObdobi(label) {
     };
   }
 
-  m = s.match(/(\d{1,2})\.(\d{4})/);
+  m = s.match(/cm\s*(\d{1,2})\/(\d{4})/i);
   if (m) {
     const month = Number(m[1]);
     const year = Number(m[2]);

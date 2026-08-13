@@ -40,7 +40,7 @@ export function normalizeNumber(x) {
 
 export function parseRequirementPeriodSortKey(label) {
   const s = String(label || "");
-  const m = s.match(/(\d{1,2})\.(\d{4})/);
+  const m = s.match(/(\d{1,2})\/(\d{4})/);
   if (!m) return 0;
   return Number(m[2]) * 100 + Number(m[1]);
 }
