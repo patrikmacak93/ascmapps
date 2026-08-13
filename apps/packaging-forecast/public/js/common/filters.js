@@ -88,16 +88,18 @@ export function openTextFilterPopover({ tableId, anchorEl, flatRows, noteText, s
     renderList();
   };
 
-  const btnApply = document.createElement("button");
-  btnApply.className = "filter-mini-btn primary";
-  btnApply.type = "button";
-  btnApply.textContent = "Použít";
-  btnApply.onclick = () => {
+  const applyFilter = () => {
     const allSelected = selected.size === universe.length;
     tableFilters[tableId][selectedKey] = allSelected ? null : [...selected];
     closeAnyFilterPopover();
     onApply();
   };
+
+  const btnApply = document.createElement("button");
+  btnApply.className = "filter-mini-btn primary";
+  btnApply.type = "button";
+  btnApply.textContent = "Použít";
+  btnApply.onclick = applyFilter;
 
   const btnClear = document.createElement("button");
   btnClear.className = "filter-mini-btn";
@@ -149,7 +151,23 @@ export function openTextFilterPopover({ tableId, anchorEl, flatRows, noteText, s
     list.appendChild(frag);
   }
 
-  search.addEventListener("input", renderList, { passive: true });
+  // Psaní do vyhledávání rovnou přepne výběr na nalezené položky (ne jen
+  // vizuálně zúží seznam) - jinak by "Použít"/Enter po napsání textu bez
+  // ručního zaškrtnutí nic nevyfiltrovaly (výběr by pořád byl "vše").
+  search.addEventListener("input", () => {
+    const q = search.value.trim().toLowerCase();
+    selected.clear();
+    (q ? universe.filter(v => v.toLowerCase().includes(q)) : universe).forEach(v => selected.add(v));
+    renderList();
+  }, { passive: true });
+
+  search.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applyFilter();
+    }
+  });
+
   renderList();
 
   const r = anchorEl.getBoundingClientRect();

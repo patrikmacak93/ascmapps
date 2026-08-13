@@ -13,8 +13,9 @@
    konvence jako u sloupce PckPoolBalance v Týdenním/Ročním přehledu
    (viz common/pivotTable.js).
 ========================================================= */
-import { $, formatNumber, budgetUrl, appState, tableFilters } from "../common/zaklad.js";
+import { $, formatNumber, budgetUrl, appState, tableFilters, hoverState } from "../common/zaklad.js";
 import { openTextFilterPopover, rowPassesTextFilter } from "../common/filters.js";
+import { applyHoverHighlight, clearAllHover } from "../common/highlight.js";
 
 function getBudgetSapText(row) {
   return String(row.SAP_ID ?? "").trim();
@@ -148,6 +149,7 @@ export function renderBudgetTable() {
 
   for (const sap of sapIds) {
     const tr = document.createElement("tr");
+    tr.dataset.rowKey = `sap||${sap}`;
 
     const tdSap = document.createElement("td");
     tdSap.className = "category-cell";
@@ -155,12 +157,15 @@ export function renderBudgetTable() {
     tr.appendChild(tdSap);
 
     const periodValues = sapMap.get(sap);
-    for (const label of periods) {
+    for (let colIndex = 0; colIndex < periods.length; colIndex++) {
+      const label = periods[colIndex];
       const value = periodValues.has(label) ? periodValues.get(label) : null;
       const td = document.createElement("td");
       td.className = "num value-cell";
       if (value !== null) td.classList.add(rowValueClass(value));
       td.textContent = value === null ? "" : formatNumber(value);
+      td.dataset.colIndex = String(colIndex + 1);
+      td.dataset.cellKey = `sap||${sap}||${label}`;
       tr.appendChild(td);
     }
 
@@ -168,5 +173,29 @@ export function renderBudgetTable() {
   }
 
   tbody.appendChild(frag);
+
+  if (!table.__hoverBound) {
+    table.__hoverBound = true;
+
+    tbody.addEventListener("mousemove", (e) => {
+      const td = e.target.closest("td");
+      if (!td) return;
+      const tr = td.parentElement;
+      if (!tr) return;
+
+      const cellKey = td.dataset.cellKey;
+      const colIndex = Number(td.dataset.colIndex);
+      const rowKey = tr.dataset.rowKey;
+
+      if (!cellKey || !Number.isFinite(colIndex) || !rowKey) return;
+      if (hoverState.tableId === "budgetTable" && hoverState.cellKey === cellKey) return;
+
+      applyHoverHighlight("budgetTable", rowKey, colIndex, cellKey);
+    }, { passive: true });
+
+    tbody.addEventListener("mouseleave", () => {
+      clearAllHover();
+    }, { passive: true });
+  }
 }
 

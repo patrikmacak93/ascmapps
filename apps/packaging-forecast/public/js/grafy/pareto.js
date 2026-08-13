@@ -54,7 +54,9 @@ export function buildEmptiesNakoupenoMap() {
 export function renderParetoFromCache() {
   const paretoStatus = $("paretoStatus");
   const period = $("paretoPeriodSelect").value;
-  const topN = Number($("paretoTopNSelect").value || 15);
+  const topNRaw = $("paretoTopNSelect").value;
+  const showAll = topNRaw === "all";
+  const topN = showAll ? Infinity : Number(topNRaw || 15);
 
   if (!period) {
     paretoStatus.textContent = "Vyber období.";
@@ -99,6 +101,7 @@ export function renderParetoFromCache() {
   // Top N by RequiredPackagingQty
   items.sort((a, b) => b.reqPck - a.reqPck);
   const top = items.slice(0, topN);
+  const topNLabel = showAll ? "Vše" : String(topN);
 
   const labels = top.map(x => x.sap);
   const barValues = top.map(x => x.reqPck);
@@ -138,7 +141,7 @@ export function renderParetoFromCache() {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: true },
-        title: { display: false, text: `Top ${topN} SAP_ID | ${period}` },
+        title: { display: false, text: `Top ${topNLabel} SAP_ID | ${period}` },
         tooltip: {
           callbacks: {
             label: (ctx) => {
@@ -164,5 +167,5 @@ export function renderParetoFromCache() {
     }
   });
 
-  paretoStatus.textContent = `Zobrazeno Top ${topN} SAP_ID podle RequiredPackagingQty. Linka = Nakoupeno z Empties. Zdrojových řádků: ${filtered.length}.`;
+  paretoStatus.textContent = `Zobrazeno Top ${topNLabel} SAP_ID podle RequiredPackagingQty. Linka = Nakoupeno z Empties. Zdrojových řádků: ${filtered.length}.`;
 }

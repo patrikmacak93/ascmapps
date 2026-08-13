@@ -188,6 +188,21 @@ export function renderPivotTable(tableId, periods, rows) {
   const selectedCatSet = selectedCat ? new Set(selectedCat) : null;
   const selectedDispSet = selectedDisp ? new Set(selectedDisp) : null;
 
+  // Kategorie/Disponent filtr se vyhodnocuje jen podle textu na úrovni
+  // SAP ID (Obal) - Projekt/Materiál mají jiný text (u Disponenta
+  // dokonce žádný), takže kdyby se filtrovalo po jejich vlastním textu,
+  // po rozbalení SAP řádku by se žádný potomek nikdy nezobrazil. Když
+  // SAP ID filtrem projde, zobrazí se (po rozbalení) všichni jeho
+  // Projekty/Materiály bez ohledu na jejich vlastní text.
+  const sapFilterPass = new Map();
+  for (const row of flatRows) {
+    if (row.level !== "sap") continue;
+    sapFilterPass.set(row.sap,
+      rowPassesTextFilter(row, selectedCatSet, getVisibleCategoryText) &&
+      rowPassesTextFilter(row, selectedDispSet, getVisibleDisponentText)
+    );
+  }
+
   function rowIsHidden(row) {
     const hiddenByCollapse =
       (row.level === "project" && state.collapsedSap.has(row.parentKey)) ||
@@ -195,8 +210,7 @@ export function renderPivotTable(tableId, periods, rows) {
 
     if (hiddenByCollapse) return true;
 
-    return !rowPassesTextFilter(row, selectedCatSet, getVisibleCategoryText) ||
-           !rowPassesTextFilter(row, selectedDispSet, getVisibleDisponentText);
+    return !sapFilterPass.get(row.sap);
   }
 
   const headerRow = document.createElement("tr");
@@ -217,8 +231,8 @@ export function renderPivotTable(tableId, periods, rows) {
     openTextFilterPopover({
       tableId,
       anchorEl: filterCatBtn,
-      flatRows,
-      noteText: "Tip: filtruje se podle textu ve sloupci Kategorie.",
+      flatRows: flatRows.filter(r => r.level === "sap"),
+      noteText: "Tip: filtruje se podle SAP ID (Obal) - vybrané SAP ID se po rozbalení zobrazí i s Projekty/Materiály.",
       selectedKey: "categorySelected",
       extractor: getVisibleCategoryText,
       onApply: () => renderPivotTableById(tableId)
@@ -354,6 +368,10 @@ export function renderPivotTable(tableId, periods, rows) {
       const td = document.createElement("td");
       td.className = "num value-cell";
       td.dataset.colIndex = String(colIndex + 2);
+
+      if (col.metric === "requirement_qty") td.classList.add("col-material");
+      if (col.metric === "RequiredPackagingQty") td.classList.add("col-packaging");
+      if (col.metric === "PckPoolBalanceSim") td.classList.add("col-poolSim");
 
       const value = Number(row.values[col.key] ?? 0);
       if (col.metric === "PckPoolBalance") td.classList.add(rowValueClass(value));

@@ -55,6 +55,15 @@
   --hover-gray-strong: rgba(1, 59, 28, 0.30);
   --selected-gray: rgba(0, 99, 43, 0.18);
   --selected-border: rgba(1, 59, 28, 0.95);
+
+  /* Sloupce "Potřeby - materiál/obaly" a "Simulace Poolu" - odlišené
+     barvou pozadí od běžných sloupců PckPoolBalance. */
+  --col-material-header: #1d4ed8;
+  --col-material-bg: #e4ecfc;
+  --col-packaging-header: #b45309;
+  --col-packaging-bg: #fbead0;
+  --col-poolsim-header: #6d28d9;
+  --col-poolsim-bg: #ece2fa;
 }
 
 html, body { height: 100%; margin: 0; }
@@ -400,6 +409,16 @@ th {
 .num.pos { color: var(--green-num); background: transparent; }
 .num.neg { color: var(--red-num); background: transparent; }
 .num.zero { color: var(--text-2); background: transparent; font-weight: 500; }
+
+/* Potřeby - materiál/obaly a Simulace Poolu - barevně odlišené sloupce */
+th.col-material { background: var(--col-material-header); }
+td.col-material { background: var(--col-material-bg); }
+
+th.col-packaging { background: var(--col-packaging-header); }
+td.col-packaging { background: var(--col-packaging-bg); }
+
+th.col-poolSim { background: var(--col-poolsim-header); }
+td.col-poolSim { background: var(--col-poolsim-bg); }
 
 .category-cell {
   width: 300px;
