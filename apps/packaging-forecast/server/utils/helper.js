@@ -27,9 +27,7 @@ const crypto = require("crypto");
    /api/yearly-overview a /api/projects se čtou opakovaně
    (každé kliknutí na "Načíst data" spustí víc GET požadavků).
    Cache uloží poslední výsledek na pár vteřin a vrací ho hned,
-   bez nového dotazu do SQL. Po úspěšném importu z Excelu
-   (/api/load-source) se cache celá smaže, ať appka příště
-   sáhne pro opravdu čerstvá data.
+   bez nového dotazu do SQL.
 =========================================================== */
 const cacheStore = new Map();
 
@@ -45,10 +43,6 @@ function cacheGet(key) {
 
 function cacheSet(key, value, ttlSeconds) {
   cacheStore.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
-}
-
-function cacheInvalidate() {
-  cacheStore.clear();
 }
 
 /* ===========================================================
@@ -216,7 +210,6 @@ function sestavitPivotTabulku(records, mode, metrics = ["PckPoolBalance", "requi
 module.exports = {
   cacheGet,
   cacheSet,
-  cacheInvalidate,
   odeslatJsonSEtag,
   rozpoznatObdobi,
   sestavitPivotTabulku

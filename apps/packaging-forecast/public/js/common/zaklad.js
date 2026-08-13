@@ -59,9 +59,6 @@ export const yearlyOverviewUrl = `${API_BASE}/yearly-overview`;
 export const emptiesUrl = `${API_BASE}/empties`;
 export const projectsUrl = `${API_BASE}/projects`;
 export const budgetUrl = `${API_BASE}/budget`;
-// Spustí na serveru load_query1_to_sql.py a nahraje čerstvá data
-// z Excelu (Power Query) do SQL, než se stáhnou do appky.
-export const loadSourceUrl = `${API_BASE}/load-source`;
 
 export const emptiesColumns = [
   "SAP_ID",

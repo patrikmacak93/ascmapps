@@ -18,25 +18,19 @@
     GET  /api/empties           - záložka "Empties" - načtení
     POST /api/empties           - záložka "Empties" - přidání řádku
     PUT  /api/empties/:id       - záložka "Empties" - úprava buňky
-    POST /api/load-source       - tlačítko "Načíst data" (import z Excelu)
 */
 
 "use strict";
 
 const express = require("express");
-const path = require("path");
-const { execFile } = require("child_process");
 
-const config = require("../config");
 const {volatConnector} = require('../services/sql_connector-klient')
 const {
   cacheGet,
   cacheSet,
-  cacheInvalidate,
   odeslatJsonSEtag,
   sestavitPivotTabulku
 } = require("../utils/helper");
-const { convertProcessSignalToExitCode } = require("util");
 
 const router = express.Router();
 const CACHE_TTL_SEKUND = 30;
@@ -234,70 +228,6 @@ router.get("/budget", async (req, res) => {
     console.error("CHYBA /api/budget:", err.message);
     res.status(err.statusCode || 500).json({ error: "Chyba při načítání tabulky Budget.", detail: err.message });
   }
-});
-
-/* ===========================================================
-   POST /api/load-source (tlačítko "Načíst data" - import z Excelu)
-   -----------------------------------------------------------
-   Tohle NEJDE přes shared-api - je to jednorázové spuštění
-   Python skriptu přímo na tomhle serveru (ne SQL dotaz).
-=========================================================== */
-let importBezi = false;
-
-router.post("/load-source", async (req, res) => {
-  if (importBezi) {
-    return res.status(409).json({ ok: false, error: "Načítání dat ze zdroje už právě běží, počkejte prosím na dokončení." });
-  }
-
-  importBezi = true;
-  const zacatek = Date.now();
-
-  const child = execFile(
-    config.PYTHON_PATH,
-    [config.SCRIPT_PATH],
-    {
-      timeout: config.IMPORT_TIMEOUT_MS,
-      windowsHide: true,
-      cwd: path.dirname(config.SCRIPT_PATH),
-      maxBuffer: 10 * 1024 * 1024
-    },
-    (error, stdout, stderr) => {
-      importBezi = false;
-      const durationMs = Date.now() - zacatek;
-
-      if (error) {
-        console.error("LOAD_SOURCE CHYBA:", error.message, stderr);
-        return res.status(500).json({
-          ok: false,
-          error: "Skript pro načtení dat do SQL selhal.",
-          detail: error.message,
-          stderr: String(stderr || "").slice(-4000),
-          stdout: String(stdout || "").slice(-4000),
-          durationMs
-        });
-      }
-
-      // Skript proběhl úspěšně -> data v SQL jsou čerstvá, smažeme
-      // cache, ať další čtení sáhne znovu do databáze.
-      cacheInvalidate();
-
-      console.log(`LOAD_SOURCE OK | durationMs=${durationMs}`);
-      res.json({ ok: true, durationMs, stdout: String(stdout || "").slice(-4000) });
-    }
-  );
-
-  child.on("error", (err) => {
-    // Např. python.exe nebyl na dané cestě nalezen
-    importBezi = false;
-    console.error("LOAD_SOURCE CHYBA SPUŠTĚNÍ:", err.message);
-    if (!res.headersSent) {
-      res.status(500).json({
-        ok: false,
-        error: "Nepodařilo se spustit Python skript. Zkontrolujte cestu k python.exe v server/config.js.",
-        detail: err.message
-      });
-    }
-  });
 });
 
 module.exports = router;

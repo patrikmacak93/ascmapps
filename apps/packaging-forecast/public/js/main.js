@@ -11,7 +11,7 @@
    importy níže.
 ========================= */
 import { $ } from "./common/zaklad.js";
-import { loadFromSourceThenAll } from "./common/dataLoader.js";
+import { loadAllData } from "./common/dataLoader.js";
 import { setTableCollapseState } from "./common/pivotTable.js";
 import { clearAllHover } from "./common/highlight.js";
 
@@ -22,7 +22,7 @@ import { initEmptiesTab } from "./empties/empties.js";
 import { initBudgetTab } from "./budget/budget.js";
 
 // ===== Hlavička: tlačítko "Načíst data" =====
-$("loadBtn").addEventListener("click", loadFromSourceThenAll);
+$("loadBtn").addEventListener("click", loadAllData);
 
 // ===== Inicializace jednotlivých záložek =====
 initGrafyTab();
