@@ -30,6 +30,21 @@ export function setTableCollapseState(tableId, mode) {
   renderPivotTableById(tableId);
 }
 
+export function openColumnsFilterPopover(tableId, anchorEl) {
+  const periods = pivotTableData[tableId]?.periods || [];
+  const flatRows = periods.map(p => ({ period: p }));
+
+  openTextFilterPopover({
+    tableId,
+    anchorEl,
+    flatRows,
+    noteText: "Tip: vyber, která období (sloupce) se mají zobrazit.",
+    selectedKey: "periodsSelected",
+    extractor: (row) => row.period,
+    onApply: () => renderPivotTableById(tableId)
+  });
+}
+
 export function renderPivotTableById(tableId) {
   const data = pivotTableData[tableId];
   if (!data) return;
@@ -52,8 +67,12 @@ export function renderPivotTable(tableId, periods, rows) {
   const showNeedsPackaging = !!needsToggles[tableId].packaging;
   const showPoolSim = !!needsToggles[tableId].poolSim;
 
+  const periodsSelected = tableFilters[tableId]?.periodsSelected;
+  const periodsSet = periodsSelected ? new Set(periodsSelected) : null;
+  const visiblePeriods = periodsSet ? periods.filter(p => periodsSet.has(p)) : periods;
+
   const displayColumns = [];
-  for (const p of periods) {
+  for (const p of visiblePeriods) {
     displayColumns.push({ period: p, metric: "PckPoolBalance", key: `${p}__PckPoolBalance`, label: p });
     if (showPoolSim) displayColumns.push({ period: p, metric: "PckPoolBalanceSim", key: `${p}__PckPoolBalanceSim`, label: `${p} (Simulace Poolu)` });
     if (showNeedsMaterial) displayColumns.push({ period: p, metric: "requirement_qty", key: `${p}__requirement_qty`, label: `${p} (Potřeby - materiál)` });

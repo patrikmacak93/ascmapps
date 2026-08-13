@@ -5,7 +5,18 @@
    tabulce nákupů obalů (Empties). Každá změna buňky se rovnou
    uloží na server (PUT /api/empties/:id v server/api-routes.js).
 ========================================================= */
-import { $, escapeHtml, emptiesUrl, projectsUrl, emptiesColumns, appState } from "../common/zaklad.js";
+import { $, emptiesUrl, projectsUrl, emptiesColumns, appState, tableFilters } from "../common/zaklad.js";
+import { openTextFilterPopover, rowPassesTextFilter } from "../common/filters.js";
+
+const FILTERABLE_EMPTIES_COLUMNS = {
+  SAP_ID: { selectedKey: "sapSelected", noteText: "Tip: filtruje se podle textu ve sloupci SAP ID." },
+  Project: { selectedKey: "projectSelected", noteText: "Tip: filtruje se podle textu ve sloupci Projekt." },
+  Disponent: { selectedKey: "disponentSelected", noteText: "Tip: filtruje se podle textu ve sloupci Disponent." }
+};
+
+function getEmptiesColumnText(col) {
+  return (row) => String(row[col] ?? "").trim();
+}
 
 export function initEmptiesTab() {
   $("loadEmptiesBtn").addEventListener("click", loadEmptiesData);
@@ -70,12 +81,64 @@ export function renderEmptiesTable() {
   tbody.innerHTML = "";
 
   const headerRow = document.createElement("tr");
-  headerRow.innerHTML = emptiesColumns.map(c => `<th>${escapeHtml(labelForEmptyColumn(c))}</th>`).join("");
+
+  for (const col of emptiesColumns) {
+    const th = document.createElement("th");
+    const filterCfg = FILTERABLE_EMPTIES_COLUMNS[col];
+
+    if (!filterCfg) {
+      th.textContent = labelForEmptyColumn(col);
+      headerRow.appendChild(th);
+      continue;
+    }
+
+    const flex = document.createElement("div");
+    flex.className = "th-flex";
+
+    const title = document.createElement("span");
+    title.textContent = labelForEmptyColumn(col);
+
+    const filterBtn = document.createElement("button");
+    filterBtn.className = "filter-btn";
+    filterBtn.type = "button";
+    filterBtn.title = `Filtrovat ${labelForEmptyColumn(col)}`;
+    filterBtn.textContent = "▾";
+    filterBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openTextFilterPopover({
+        tableId: "emptiesTable",
+        anchorEl: filterBtn,
+        flatRows: appState.emptiesData,
+        noteText: filterCfg.noteText,
+        selectedKey: filterCfg.selectedKey,
+        extractor: getEmptiesColumnText(col),
+        onApply: renderEmptiesTable
+      });
+    });
+
+    flex.append(title, filterBtn);
+    th.appendChild(flex);
+    headerRow.appendChild(th);
+  }
+
   thead.appendChild(headerRow);
+
+  const sapSelected = tableFilters.emptiesTable.sapSelected;
+  const projectSelected = tableFilters.emptiesTable.projectSelected;
+  const disponentSelected = tableFilters.emptiesTable.disponentSelected;
+  const sapSet = sapSelected ? new Set(sapSelected) : null;
+  const projectSet = projectSelected ? new Set(projectSelected) : null;
+  const disponentSet = disponentSelected ? new Set(disponentSelected) : null;
+
+  const visibleRows = appState.emptiesData.filter(row =>
+    rowPassesTextFilter(row, sapSet, getEmptiesColumnText("SAP_ID")) &&
+    rowPassesTextFilter(row, projectSet, getEmptiesColumnText("Project")) &&
+    rowPassesTextFilter(row, disponentSet, getEmptiesColumnText("Disponent"))
+  );
 
   const frag = document.createDocumentFragment();
 
-  for (const row of appState.emptiesData) {
+  for (const row of visibleRows) {
     const tr = document.createElement("tr");
     tr.className = "empty-row";
     tr.dataset.id = row.EmptiesID;

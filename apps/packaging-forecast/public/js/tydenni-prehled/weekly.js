@@ -8,7 +8,7 @@
    konkrétní záložku: checkboxy "Potřeby - materiál" / "Potřeby - obaly".
 ========================= */
 import { $, needsToggles } from "../common/zaklad.js";
-import { renderPivotTableById } from "../common/pivotTable.js";
+import { renderPivotTableById, openColumnsFilterPopover } from "../common/pivotTable.js";
 
 const TABLE_ID = "weeklyTable";
 
@@ -26,5 +26,11 @@ export function initWeeklyTab() {
   $("weeklyPoolSimToggle").addEventListener("change", (e) => {
     needsToggles[TABLE_ID].poolSim = !!e.target.checked;
     renderPivotTableById(TABLE_ID);
+  });
+
+  const columnsBtn = $("weeklyColumnsFilterBtn");
+  columnsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openColumnsFilterPopover(TABLE_ID, columnsBtn);
   });
 }

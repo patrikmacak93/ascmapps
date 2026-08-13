@@ -364,14 +364,17 @@ th {
 #weeklyTable th:not(.category-cell),
 #weeklyTable td.num,
 #yearlyTable th:not(.category-cell),
-#yearlyTable td.num {
+#yearlyTable td.num,
+#budgetTable th:not(.category-cell),
+#budgetTable td.num {
   width: 96px;
   min-width: 96px;
   max-width: 96px;
 }
 
 #weeklyTable thead th:not(.category-cell),
-#yearlyTable thead th:not(.category-cell) {
+#yearlyTable thead th:not(.category-cell),
+#budgetTable thead th:not(.category-cell) {
   white-space: normal;
   line-height: 1.2;
   word-break: break-word;
@@ -384,7 +387,8 @@ th {
 }
 
 #weeklyTable thead th.category-cell,
-#yearlyTable thead th.category-cell {
+#yearlyTable thead th.category-cell,
+#budgetTable thead th.category-cell {
   white-space: normal;
   line-height: 1.2;
   word-break: break-word;

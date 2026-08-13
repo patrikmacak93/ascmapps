@@ -102,8 +102,10 @@ export const tableStates = {
 };
 
 export const tableFilters = {
-  weeklyTable: { categorySelected: null, disponentSelected: null },
-  yearlyTable: { categorySelected: null, disponentSelected: null }
+  weeklyTable: { categorySelected: null, disponentSelected: null, periodsSelected: null },
+  yearlyTable: { categorySelected: null, disponentSelected: null, periodsSelected: null },
+  emptiesTable: { sapSelected: null, projectSelected: null, disponentSelected: null },
+  budgetTable: { sapSelected: null }
 };
 
 export const filterPopoverState = {
