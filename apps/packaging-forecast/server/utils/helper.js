@@ -195,7 +195,11 @@ function sestavitPivotTabulku(records, mode, metrics = ["PckPoolBalance", "requi
 
           for (const period of periods) {
             const cell = item.values.get(period) || {};
-            for (const m of metrics) outRow[`${period}__${m}`] = cell[m] ?? 0;
+            // NULL (žádná data pro tenhle materiál/období) se posílá dál jako
+            // NULL, ne jako 0 - jinak by "chybí data" a "opravdová nula" byly
+            // nerozeznatelné a "chybějící" 0 by kazilo minimum PckPoolBalance
+            // při skládání do Projekt/SAP řádků (viz common/pivotTable.js).
+            for (const m of metrics) outRow[`${period}__${m}`] = cell[m] ?? null;
           }
 
           rows.push(outRow);

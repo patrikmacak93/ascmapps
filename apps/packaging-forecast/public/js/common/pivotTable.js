@@ -101,12 +101,21 @@ export function renderPivotTable(tableId, periods, rows) {
     projectNode.materials.push(r);
 
     for (const col of displayColumns) {
-      const value = Number(r[col.key] ?? 0);
-
       if (col.metric === "PckPoolBalance" || col.metric === "PckPoolBalanceSim") {
-        if (projectNode.total[col.key] === undefined) projectNode.total[col.key] = value;
-        else projectNode.total[col.key] = Math.min(projectNode.total[col.key], value);
+        // NULL = pro tenhle materiál/období není žádná hodnota (ne že by
+        // pool byl 0) - do minima se nepočítá, jinak by "chybí data"
+        // uměle stahovalo minimum na 0 i když jsou jinde v projektu
+        // reálná čísla (např. 80000).
+        const raw = r[col.key];
+        if (raw === null || raw === undefined) continue;
+        const value = Number(raw);
+        if (!Number.isFinite(value)) continue;
+
+        projectNode.total[col.key] = projectNode.total[col.key] === undefined
+          ? value
+          : Math.min(projectNode.total[col.key], value);
       } else {
+        const value = Number(r[col.key] ?? 0);
         projectNode.total[col.key] = (projectNode.total[col.key] || 0) + value;
       }
     }
@@ -115,8 +124,20 @@ export function renderPivotTable(tableId, periods, rows) {
   for (const [, sapNode] of hierarchy.entries()) {
     for (const [, projectNode] of sapNode.projects.entries()) {
       for (const col of displayColumns) {
-        const value = Number(projectNode.total[col.key] ?? 0);
-        sapNode.total[col.key] = (sapNode.total[col.key] || 0) + value;
+        if (col.metric === "PckPoolBalance" || col.metric === "PckPoolBalanceSim") {
+          // Stejná konvence jako u Materiál -> Projekt výš: SAP balance je
+          // minimum z jeho projektů, ne součet - projekt bez dat (undefined)
+          // se do minima nepočítá.
+          const value = projectNode.total[col.key];
+          if (value === undefined) continue;
+
+          sapNode.total[col.key] = sapNode.total[col.key] === undefined
+            ? value
+            : Math.min(sapNode.total[col.key], value);
+        } else {
+          const value = Number(projectNode.total[col.key] ?? 0);
+          sapNode.total[col.key] = (sapNode.total[col.key] || 0) + value;
+        }
       }
     }
   }
@@ -373,9 +394,17 @@ export function renderPivotTable(tableId, periods, rows) {
       if (col.metric === "RequiredPackagingQty") td.classList.add("col-packaging");
       if (col.metric === "PckPoolBalanceSim") td.classList.add("col-poolSim");
 
-      const value = Number(row.values[col.key] ?? 0);
-      if (col.metric === "PckPoolBalance") td.classList.add(rowValueClass(value));
-      td.textContent = formatNumber(value);
+      const rawValue = row.values[col.key];
+      const isPoolMetric = col.metric === "PckPoolBalance" || col.metric === "PckPoolBalanceSim";
+
+      if (isPoolMetric && (rawValue === null || rawValue === undefined)) {
+        // Žádná data pro tenhle řádek/období - nezaměňovat s opravdovou 0.
+        td.textContent = "";
+      } else {
+        const value = Number(rawValue ?? 0);
+        if (col.metric === "PckPoolBalance") td.classList.add(rowValueClass(value));
+        td.textContent = formatNumber(value);
+      }
 
       const cellKey = `${row.key}||${col.key}`;
       td.dataset.cellKey = cellKey;
