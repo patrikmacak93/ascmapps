@@ -64,6 +64,11 @@
   --col-packaging-bg: #fbead0;
   --col-poolsim-header: #6d28d9;
   --col-poolsim-bg: #ece2fa;
+
+  /* Souhrnné sloupce v Budgetu (Peak, Peak cena, Pro Budget budeme
+     dokupovat, Cena reálného dokupu) - odlišené od měsíčních sloupců. */
+  --col-summary-header: #334155;
+  --col-summary-bg: #eef1f5;
 }
 
 html, body { height: 100%; margin: 0; }
@@ -419,6 +424,9 @@ td.col-packaging { background: var(--col-packaging-bg); }
 
 th.col-poolSim { background: var(--col-poolsim-header); }
 td.col-poolSim { background: var(--col-poolsim-bg); }
+
+th.col-summary { background: var(--col-summary-header); }
+td.col-summary { background: var(--col-summary-bg); }
 
 .category-cell {
   width: 300px;

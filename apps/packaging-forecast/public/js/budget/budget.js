@@ -3,26 +3,83 @@
 
    Načte obsah SQL view [FSTASCM].[pckForecast].[vw_budget]
    (backend appky: GET /api/budget -> sql-connector /budget) a
-   zobrazí ho jako pivot tabulku podobnou Ročnímu přehledu:
-   řádky = SAP ID, sloupce = měsíc/rok, hodnota = MinPckPoolBalance.
+   zobrazí ho jako stromovou tabulku Obal (SAP ID) -> Projekt ->
+   Materiál - stejným sdíleným enginem jako Týdenní/Roční přehled
+   (viz common/pivotTable.js), jen s jedinou "obdobovou" metrikou
+   MinPckPoolBalance místo PckPoolBalance/requirement_qty/...
 
-   Zdrojová data mají jeden řádek za SAP_ID + Project + měsíc/rok
-   (viz vw_budget: year, month, SAP_ID, Project, MinPckPoolBalance).
-   Když má jedno SAP ID víc projektů, do buňky jde nejmenší
-   (nejhorší) hodnota ze všech jeho projektů pro dané období - stejná
-   konvence jako u sloupce PckPoolBalance v Týdenním/Ročním přehledu
-   (viz common/pivotTable.js).
+   Zdrojová data mají jeden řádek za SAP_ID + Project + local_material
+   + měsíc/rok (viz vw_budget: year, month, SAP_ID, Project,
+   local_material, Disponent, MinPckPoolBalance, peak, peakCena,
+   "Pro Budget budeme dokupovat", "Cena reálného dokupu").
+
+   Peak/Peak cena/Pro Budget budeme dokupovat/Cena reálného dokupu
+   nejsou vázané na období (jsou to hodnoty za celé SAP ID/Projekt),
+   takže se do pivotTable.js předávají jako extraColumns a zobrazí se
+   jen na SAP řádku:
+   - peak/peakCena: ve view jsou už spočítané za celé SAP ID (přes
+     všechny projekty najednou), takže na každém jeho řádku je stejná
+     hodnota - stačí vzít první nenulovou.
+   - "Pro Budget budeme dokupovat"/"Cena reálného dokupu": to jsou
+     částky/množství per Projekt (z Empties, opakují se na každém
+     měsíci/materiálu toho projektu) - za SAP ID se sčítají přes jeho
+     jednotlivé unikátní projekty, ať se nezapočítají vícekrát.
 ========================================================= */
-import { $, formatNumber, budgetUrl, appState, tableFilters, hoverState } from "../common/zaklad.js";
-import { openTextFilterPopover, rowPassesTextFilter } from "../common/filters.js";
-import { applyHoverHighlight, clearAllHover } from "../common/highlight.js";
+import { $, budgetUrl, appState } from "../common/zaklad.js";
+import { renderPivotTable, openColumnsFilterPopover } from "../common/pivotTable.js";
 
-function getBudgetSapText(row) {
-  return String(row.SAP_ID ?? "").trim();
+const TABLE_ID = "budgetTable";
+
+function toNumberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
+
+function formatMoney(value) {
+  return `${value.toLocaleString("cs-CZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK`;
+}
+
+function sumUniqueByProject(sapRows, field) {
+  const perProject = new Map();
+  for (const r of sapRows) {
+    const project = String(r.Project ?? "").trim();
+    if (!perProject.has(project)) perProject.set(project, toNumberOrNull(r[field]));
+  }
+
+  let sum = 0;
+  let hasValue = false;
+  for (const v of perProject.values()) {
+    if (v === null) continue;
+    sum += v;
+    hasValue = true;
+  }
+  return hasValue ? sum : null;
+}
+
+function firstNonNull(sapRows, field) {
+  for (const r of sapRows) {
+    const v = toNumberOrNull(r[field]);
+    if (v !== null) return v;
+  }
+  return null;
+}
+
+const EXTRA_COLUMNS = [
+  { key: "peak", label: "Peak", compute: (sapRows) => firstNonNull(sapRows, "peak") },
+  { key: "peakCena", label: "Peak cena", compute: (sapRows) => firstNonNull(sapRows, "peakCena"), format: formatMoney },
+  { key: "proBudget", label: "Pro Budget budeme dokupovat", compute: (sapRows) => sumUniqueByProject(sapRows, "Pro Budget budeme dokupovat") },
+  { key: "cenaRealna", label: "Cena reálného dokupu", compute: (sapRows) => sumUniqueByProject(sapRows, "Cena reálného dokupu"), format: formatMoney }
+];
 
 export function initBudgetTab() {
   $("loadBudgetBtn").addEventListener("click", loadBudgetData);
+
+  const columnsBtn = $("budgetColumnsFilterBtn");
+  columnsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openColumnsFilterPopover(TABLE_ID, columnsBtn);
+  });
 }
 
 export async function loadBudgetData() {
@@ -45,157 +102,48 @@ export async function loadBudgetData() {
 }
 
 export function renderBudgetTable() {
-  const table = $("budgetTable");
-  const thead = table.tHead || table.createTHead();
-  const tbody = table.tBodies[0] || table.createTBody();
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
+  const raw = appState.budgetData;
 
-  const rows = appState.budgetData;
-  if (!rows.length) return;
-
-  // ---- Sloupce (období) ----
   const periodsMap = new Map(); // sortKey -> label
-  for (const r of rows) {
+  const rowsMap = new Map(); // "SAP||Project||Materiál" -> pivot řádek (jako u Týdenního/Ročního přehledu)
+
+  for (const r of raw) {
     const year = Number(r.year);
     const month = Number(r.month);
     if (!Number.isFinite(year) || !Number.isFinite(month)) continue;
+
+    const label = `${String(month).padStart(2, "0")}/${year}`;
     const sortKey = year * 100 + month;
-    if (!periodsMap.has(sortKey)) periodsMap.set(sortKey, `${String(month).padStart(2, "0")}/${year}`);
-  }
-  const periods = [...periodsMap.entries()].sort((a, b) => a[0] - b[0]).map(([, label]) => label);
-
-  // ---- Řádky (SAP ID) - napříč projekty se do buňky bere MIN ----
-  const sapMap = new Map(); // SAP_ID -> Map(periodLabel -> hodnota | null)
-
-  for (const r of rows) {
-    const year = Number(r.year);
-    const month = Number(r.month);
-    if (!Number.isFinite(year) || !Number.isFinite(month)) continue;
+    if (!periodsMap.has(sortKey)) periodsMap.set(sortKey, label);
 
     const sap = String(r.SAP_ID ?? "").trim();
-    const label = `${String(month).padStart(2, "0")}/${year}`;
-    const value = r.MinPckPoolBalance === null || r.MinPckPoolBalance === undefined ? null : Number(r.MinPckPoolBalance);
+    const project = String(r.Project ?? "").trim();
+    const material = String(r.local_material ?? "").trim();
+    const key = `${sap}||${project}||${material}`;
 
-    let periodValues = sapMap.get(sap);
-    if (!periodValues) {
-      periodValues = new Map();
-      sapMap.set(sap, periodValues);
+    let row = rowsMap.get(key);
+    if (!row) {
+      row = { SAP_ID: sap, Project: project, Disponent: r.Disponent || "", local_material: material };
+      rowsMap.set(key, row);
     }
+    if (!row.Disponent && r.Disponent) row.Disponent = r.Disponent;
 
-    const current = periodValues.get(label);
-    if (value !== null && Number.isFinite(value)) {
-      periodValues.set(label, current === undefined || current === null ? value : Math.min(current, value));
-    } else if (current === undefined) {
-      periodValues.set(label, null);
-    }
+    row[`${label}__PckPoolBalance`] = r.MinPckPoolBalance === null || r.MinPckPoolBalance === undefined
+      ? null
+      : Number(r.MinPckPoolBalance);
+
+    // peak/peakCena/"Pro Budget budeme dokupovat"/"Cena reálného dokupu" se
+    // neváží na období - stačí je z posledního zpracovaného řádku přenést
+    // na výsledný pivot řádek beze změny, extraColumns si je pak samy
+    // přepočítají ze všech syrových řádků daného SAP ID (viz sumUniqueByProject/firstNonNull).
+    row.peak = r.peak;
+    row.peakCena = r.peakCena;
+    row["Pro Budget budeme dokupovat"] = r["Pro Budget budeme dokupovat"];
+    row["Cena reálného dokupu"] = r["Cena reálného dokupu"];
   }
 
-  const allSapIds = [...sapMap.keys()].sort((a, b) => a.localeCompare(b, "cs"));
+  const periods = [...periodsMap.entries()].sort((a, b) => a[0] - b[0]).map(([, label]) => label);
+  const rows = [...rowsMap.values()];
 
-  const sapSelected = tableFilters.budgetTable.sapSelected;
-  const sapSet = sapSelected ? new Set(sapSelected) : null;
-  const sapIds = allSapIds.filter(sap => rowPassesTextFilter({ SAP_ID: sap }, sapSet, getBudgetSapText));
-
-  // ---- Hlavička ----
-  const headerRow = document.createElement("tr");
-  const thSap = document.createElement("th");
-  thSap.className = "category-cell";
-
-  const thFlex = document.createElement("div");
-  thFlex.className = "th-flex";
-
-  const thTitle = document.createElement("span");
-  thTitle.textContent = "SAP ID";
-
-  const filterBtn = document.createElement("button");
-  filterBtn.className = "filter-btn";
-  filterBtn.type = "button";
-  filterBtn.title = "Filtrovat SAP ID";
-  filterBtn.textContent = "▾";
-  filterBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    openTextFilterPopover({
-      tableId: "budgetTable",
-      anchorEl: filterBtn,
-      flatRows: rows,
-      noteText: "Tip: filtruje se podle textu ve sloupci SAP ID.",
-      selectedKey: "sapSelected",
-      extractor: getBudgetSapText,
-      onApply: renderBudgetTable
-    });
-  });
-
-  thFlex.append(thTitle, filterBtn);
-  thSap.appendChild(thFlex);
-  headerRow.appendChild(thSap);
-
-  for (const label of periods) {
-    const th = document.createElement("th");
-    th.className = "value-cell";
-    th.textContent = label;
-    headerRow.appendChild(th);
-  }
-  thead.appendChild(headerRow);
-
-  // ---- Tělo ----
-  function rowValueClass(value) {
-    const n = Number(value);
-    if (!Number.isFinite(n) || n === 0) return "zero";
-    return n > 0 ? "pos" : "neg";
-  }
-
-  const frag = document.createDocumentFragment();
-
-  for (const sap of sapIds) {
-    const tr = document.createElement("tr");
-    tr.dataset.rowKey = `sap||${sap}`;
-
-    const tdSap = document.createElement("td");
-    tdSap.className = "category-cell";
-    tdSap.textContent = sap;
-    tr.appendChild(tdSap);
-
-    const periodValues = sapMap.get(sap);
-    for (let colIndex = 0; colIndex < periods.length; colIndex++) {
-      const label = periods[colIndex];
-      const value = periodValues.has(label) ? periodValues.get(label) : null;
-      const td = document.createElement("td");
-      td.className = "num value-cell";
-      if (value !== null) td.classList.add(rowValueClass(value));
-      td.textContent = value === null ? "" : formatNumber(value);
-      td.dataset.colIndex = String(colIndex + 1);
-      td.dataset.cellKey = `sap||${sap}||${label}`;
-      tr.appendChild(td);
-    }
-
-    frag.appendChild(tr);
-  }
-
-  tbody.appendChild(frag);
-
-  if (!table.__hoverBound) {
-    table.__hoverBound = true;
-
-    tbody.addEventListener("mousemove", (e) => {
-      const td = e.target.closest("td");
-      if (!td) return;
-      const tr = td.parentElement;
-      if (!tr) return;
-
-      const cellKey = td.dataset.cellKey;
-      const colIndex = Number(td.dataset.colIndex);
-      const rowKey = tr.dataset.rowKey;
-
-      if (!cellKey || !Number.isFinite(colIndex) || !rowKey) return;
-      if (hoverState.tableId === "budgetTable" && hoverState.cellKey === cellKey) return;
-
-      applyHoverHighlight("budgetTable", rowKey, colIndex, cellKey);
-    }, { passive: true });
-
-    tbody.addEventListener("mouseleave", () => {
-      clearAllHover();
-    }, { passive: true });
-  }
+  renderPivotTable(TABLE_ID, periods, rows, EXTRA_COLUMNS);
 }
-

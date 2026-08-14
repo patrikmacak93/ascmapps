@@ -158,6 +158,16 @@
             <button class="btn-primary" id="loadBudgetBtn">Načíst Budget</button>
             <span class="status" id="budgetStatus">Tabulka Budget není načtena.</span>
           </div>
+          <div class="table-toolbar inline-toolbar">
+            <span class="toolbar-label">Zobrazení hierarchie:</span>
+            <button class="table-action-btn" data-collapse-table="budgetTable" data-collapse-mode="sap">Obal</button>
+            <button class="table-action-btn" data-collapse-table="budgetTable" data-collapse-mode="project">Projekt</button>
+            <button class="table-action-btn" data-collapse-table="budgetTable" data-collapse-mode="material">Materiál</button>
+
+            <span class="toolbar-separator"></span>
+
+            <button class="table-action-btn" id="budgetColumnsFilterBtn" type="button">Sloupce ▾</button>
+          </div>
           <div class="table-wrapper">
             <table id="budgetTable">
               <thead></thead>

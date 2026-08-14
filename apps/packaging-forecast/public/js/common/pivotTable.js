@@ -48,12 +48,19 @@ export function openColumnsFilterPopover(tableId, anchorEl) {
 export function renderPivotTableById(tableId) {
   const data = pivotTableData[tableId];
   if (!data) return;
-  renderPivotTable(tableId, data.periods, data.rows);
+  renderPivotTable(tableId, data.periods, data.rows, data.extraColumns);
   applySelectionHighlight(tableId);
 }
 
-export function renderPivotTable(tableId, periods, rows) {
-  pivotTableData[tableId] = { periods, rows };
+/**
+ * extraColumns (volitelné): statické sloupce navíc, které nejsou vázané na
+ * období (např. Budget - Peak, Peak cena...). Zobrazí se jen na SAP řádku
+ * (Projekt/Materiál mají v nich prázdno), hodnotu spočítá volající přes
+ * col.compute(sapRows) ze všech syrových řádků patřících danému SAP ID.
+ * Tvar: { key, label, money?: boolean, compute(sapRows) => number|null }.
+ */
+export function renderPivotTable(tableId, periods, rows, extraColumns = []) {
+  pivotTableData[tableId] = { periods, rows, extraColumns };
   const table = $(tableId);
   if (!table) return;
 
@@ -88,10 +95,11 @@ export function renderPivotTable(tableId, periods, rows) {
 
     let sapNode = hierarchy.get(sap);
     if (!sapNode) {
-      sapNode = { disponent: disponent, total: {}, projects: new Map() };
+      sapNode = { disponent: disponent, total: {}, projects: new Map(), allRows: [] };
       hierarchy.set(sap, sapNode);
     }
     if (!sapNode.disponent && disponent) sapNode.disponent = disponent;
+    sapNode.allRows.push(r);
 
     let projectNode = sapNode.projects.get(project);
     if (!projectNode) {
@@ -160,6 +168,10 @@ export function renderPivotTable(tableId, periods, rows) {
 
   for (const sap of sapKeys) {
     const sapNode = hierarchy.get(sap);
+
+    const extraValues = {};
+    for (const col of extraColumns) extraValues[col.key] = col.compute(sapNode.allRows);
+
     flatRows.push({
       level: "sap",
       sap,
@@ -167,6 +179,7 @@ export function renderPivotTable(tableId, periods, rows) {
       disponent: sapNode.disponent || "",
       material: "",
       values: sapNode.total,
+      extraValues,
       key: `sap||${sap}`,
       parentKey: null
     });
@@ -290,6 +303,13 @@ export function renderPivotTable(tableId, periods, rows) {
   thDisp.appendChild(thDispFlex);
   headerRow.appendChild(thDisp);
 
+  for (const col of extraColumns) {
+    const th = document.createElement("th");
+    th.className = "value-cell col-summary";
+    th.textContent = col.label;
+    headerRow.appendChild(th);
+  }
+
   for (const col of displayColumns) {
     const th = document.createElement("th");
     th.className = "value-cell";
@@ -384,11 +404,30 @@ export function renderPivotTable(tableId, periods, rows) {
     tdDisp.textContent = row.level === "sap" ? (row.disponent || "") : "";
     tr.appendChild(tdDisp);
 
+    for (let extraIndex = 0; extraIndex < extraColumns.length; extraIndex++) {
+      const col = extraColumns[extraIndex];
+      const td = document.createElement("td");
+      td.className = "num value-cell col-summary";
+      td.dataset.colIndex = String(extraIndex + 2);
+
+      const rawValue = row.extraValues ? row.extraValues[col.key] : null;
+      if (rawValue === null || rawValue === undefined) {
+        td.textContent = "";
+      } else {
+        const value = Number(rawValue);
+        td.classList.add(rowValueClass(value));
+        td.textContent = col.format ? col.format(value) : formatNumber(value);
+        td.dataset.cellKey = `${row.key}||extra||${col.key}`;
+      }
+
+      tr.appendChild(td);
+    }
+
     for (let colIndex = 0; colIndex < displayColumns.length; colIndex++) {
       const col = displayColumns[colIndex];
       const td = document.createElement("td");
       td.className = "num value-cell";
-      td.dataset.colIndex = String(colIndex + 2);
+      td.dataset.colIndex = String(colIndex + 2 + extraColumns.length);
 
       if (col.metric === "requirement_qty") td.classList.add("col-material");
       if (col.metric === "RequiredPackagingQty") td.classList.add("col-packaging");

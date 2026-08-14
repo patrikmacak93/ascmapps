@@ -88,24 +88,27 @@ export const appState = {
 
 export const pivotTableData = {
   weeklyTable: null,
-  yearlyTable: null
+  yearlyTable: null,
+  budgetTable: null
 };
 
 export const needsToggles = {
   weeklyTable: { material: false, packaging: false, poolSim: false },
-  yearlyTable: { material: false, packaging: false, poolSim: false }
+  yearlyTable: { material: false, packaging: false, poolSim: false },
+  budgetTable: { material: false, packaging: false, poolSim: false }
 };
 
 export const tableStates = {
   weeklyTable: { initialized: false, collapsedSap: new Set(), collapsedProject: new Set(), allSapKeys: [], allProjectKeys: [] },
-  yearlyTable: { initialized: false, collapsedSap: new Set(), collapsedProject: new Set(), allSapKeys: [], allProjectKeys: [] }
+  yearlyTable: { initialized: false, collapsedSap: new Set(), collapsedProject: new Set(), allSapKeys: [], allProjectKeys: [] },
+  budgetTable: { initialized: false, collapsedSap: new Set(), collapsedProject: new Set(), allSapKeys: [], allProjectKeys: [] }
 };
 
 export const tableFilters = {
   weeklyTable: { categorySelected: null, disponentSelected: null, periodsSelected: null },
   yearlyTable: { categorySelected: null, disponentSelected: null, periodsSelected: null },
   emptiesTable: { sapSelected: null, projectSelected: null, disponentSelected: null },
-  budgetTable: { sapSelected: null }
+  budgetTable: { categorySelected: null, disponentSelected: null, periodsSelected: null }
 };
 
 export const filterPopoverState = {
@@ -121,6 +124,7 @@ export const hoverState = {
 
 export const selectionState = {
   weeklyTable: { rowKey: null, colIndex: null, cellKey: null },
-  yearlyTable: { rowKey: null, colIndex: null, cellKey: null }
+  yearlyTable: { rowKey: null, colIndex: null, cellKey: null },
+  budgetTable: { rowKey: null, colIndex: null, cellKey: null }
 };
 
