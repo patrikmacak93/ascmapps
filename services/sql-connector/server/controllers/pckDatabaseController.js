@@ -66,10 +66,22 @@ async function createPckRecord(req, res, next) {
       request.input(nazevParametru, sql.NVarChar, p.hodnota);
     });
 
+    // POZOR: tabulka dbo.pckDatabase má trigger (dopočítává SAP ID, rozměry
+    // a hmotnosti podle vybraného typu KLT/palety). SQL Server NEDOVOLÍ
+    // "OUTPUT ... " vracený rovnou volajícímu, když má cílová tabulka
+    // zapnutý trigger — INSERT pak spadne na chybu 334:
+    //   "The target table ... cannot have any enabled triggers if the
+    //    statement contains an OUTPUT clause without INTO clause."
+    // (Proto zakládání záznamu padalo na HTTP 500, zatímco UPDATE, který
+    // žádné OUTPUT nemá, fungoval.) Řešení: OUTPUT směřovat do tabulkové
+    // proměnné (OUTPUT ... INTO), což je s triggery povolené a stále vrátí
+    // skutečné nově vzniklé ID.
     const result = await request.query(`
+      DECLARE @novy TABLE ([ID] INT);
       INSERT INTO ${TABULKA} (${sloupce.join(', ')})
-      OUTPUT INSERTED.[ID] AS ID
-      VALUES (${parametry.join(', ')})`);
+      OUTPUT INSERTED.[ID] INTO @novy ([ID])
+      VALUES (${parametry.join(', ')});
+      SELECT [ID] AS ID FROM @novy;`);
 
     res.status(201).json({ data: { ID: result.recordset?.[0]?.ID ?? null } });
   } catch (err) {
@@ -158,4 +170,3 @@ module.exports = {
   updatePckRecord,
   deletePckRecord,
 };
-
