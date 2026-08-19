@@ -59,31 +59,28 @@ async function createPckRecord(req, res, next) {
     const sloupce = [];
     const parametry = [];
 
+    // POZOR na pojmenování parametrů: ovladač msnodesqlv8 posílá dotaz přes
+    // sp_executesql a placeholdery si POJMENUJE @P1, @P2, @P3… Knihovna mssql
+    // navíc k dotazu předřazuje "declare @<jméno> …" podle jmen z request.input.
+    // Kdybychom parametry pojmenovali p0, p1, … pak @p1 (naše proměnná) a @P1
+    // (parametr od ODBC) jsou pro SQL Server TOTÉŽ jméno (nerozlišuje velikost
+    // písmen) → "The variable name '@p1' has already been declared." a INSERT
+    // i UPDATE spadnou na HTTP 500. Proto NIKDY nepoužívat prefix "p"+číslo;
+    // stačí jakýkoli jiný, tady "val".
     pole.forEach((p, i) => {
-      const nazevParametru = `p${i}`;
+      const nazevParametru = `val${i}`;
       sloupce.push(`[${p.db}]`);
       parametry.push(`@${nazevParametru}`);
       request.input(nazevParametru, sql.NVarChar, p.hodnota);
     });
 
-    // POZOR: tabulka dbo.pckDatabase má trigger (dopočítává SAP ID, rozměry
-    // a hmotnosti podle vybraného typu KLT/palety). SQL Server NEDOVOLÍ
-    // "OUTPUT ... " vracený rovnou volajícímu, když má cílová tabulka
-    // zapnutý trigger — INSERT pak spadne na chybu 334:
-    //   "The target table ... cannot have any enabled triggers if the
-    //    statement contains an OUTPUT clause without INTO clause."
-    // (Proto zakládání záznamu padalo na HTTP 500, zatímco UPDATE, který
-    // žádné OUTPUT nemá, fungoval.) Řešení: OUTPUT směřovat do tabulkové
-    // proměnné (OUTPUT ... INTO), což je s triggery povolené a stále vrátí
-    // skutečné nově vzniklé ID.
-    const result = await request.query(`
-      DECLARE @novy TABLE ([ID] INT);
+    // Jednopříkazový parametrizovaný INSERT (žádné OUTPUT, žádná vícepříkazová
+    // dávka). Nově vzniklé ID nevracíme – frontend ho po založení nepoužívá.
+    await request.query(`
       INSERT INTO ${TABULKA} (${sloupce.join(', ')})
-      OUTPUT INSERTED.[ID] INTO @novy ([ID])
-      VALUES (${parametry.join(', ')});
-      SELECT [ID] AS ID FROM @novy;`);
+      VALUES (${parametry.join(', ')})`);
 
-    res.status(201).json({ data: { ID: result.recordset?.[0]?.ID ?? null } });
+    res.status(201).json({ ok: true, data: { ID: null } });
   } catch (err) {
     next(err);
   }
@@ -113,8 +110,10 @@ async function updatePckRecord(req, res, next) {
     const pool = await poolPromise;
     const request = pool.request().input('id', sql.Int, id);
 
+    // Stejný důvod jako u createPckRecord: parametry NESMÍ začínat na "p"+číslo,
+    // jinak @p1 koliduje s ODBC parametrem @P1 → "@p1 already declared".
     const setCasti = pole.map((p, i) => {
-      const nazevParametru = `p${i}`;
+      const nazevParametru = `val${i}`;
       request.input(nazevParametru, sql.NVarChar, p.hodnota);
       return `[${p.db}] = @${nazevParametru}`;
     });
