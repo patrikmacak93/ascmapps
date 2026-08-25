@@ -1,0 +1,192 @@
+/* ============================================================
+   Outbound PNZ - styl ladeny na Schaeffler portal (homepage.css)
+   ============================================================ */
+:root {
+  --brand:        #00893d;
+  --brand-dark:   #00632b;
+  --brand-darker: #013b1c;
+  --brand-lime:   #7ab800;
+
+  --bg:      #eef1f0;
+  --surface: #ffffff;
+  --ink:     #14201a;
+  --ink-soft:#5a6560;
+  --line:    #dce2df;
+
+  --radius: 14px;
+  --shadow:      0 1px 2px rgba(1,59,28,.06), 0 8px 24px rgba(1,59,28,.06);
+  --shadow-lift: 0 2px 4px rgba(1,59,28,.08), 0 18px 40px rgba(1,59,28,.14);
+
+  --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --maxw: 1120px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+/* ---- topbar ---- */
+.topbar { background: var(--brand-dark); color: #fff; }
+.topbar .wrap { display: flex; align-items: center; gap: 14px; height: 56px; }
+.wordmark { font-weight: 700; font-size: 20px; letter-spacing: .06em; text-transform: uppercase; }
+.wordmark small {
+  display: block; font-size: 10px; letter-spacing: .22em;
+  font-weight: 600; opacity: .8; margin-top: -2px;
+}
+.topbar-spacer { flex: 1; }
+.topbar-meta {
+  font-size: 12.5px; letter-spacing: .04em; opacity: .85;
+  border-left: 1px solid rgba(255,255,255,.25); padding-left: 14px;
+}
+
+/* ---- page head ---- */
+.page-head { border-bottom: 1px solid var(--line); padding: 26px 0 24px; }
+.page-head h1 {
+  margin: 8px 0 0; font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700; letter-spacing: -.01em;
+}
+.page-head p { margin: 6px 0 0; font-size: 14.5px; color: var(--ink-soft); }
+
+.btn-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--ink-soft); font-weight: 600;
+}
+.btn-back:hover { color: var(--brand); }
+.btn-back svg { width: 16px; height: 16px; }
+
+main { padding: 28px 0 48px; }
+
+/* ---- vyhledavaci oblast (karta + badge vedle) ---- */
+.search-area {
+  display: flex; gap: 16px; align-items: stretch; flex-wrap: wrap;
+}
+
+/* ---- vyhledavaci karta ---- */
+.search-card {
+  flex: 1 1 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  max-width: 620px;
+}
+.search-label {
+  display: block; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--brand); margin-bottom: 8px;
+}
+.search-row { display: flex; gap: 10px; }
+.search-input {
+  flex: 1; font: inherit; font-size: 15px;
+  padding: 11px 14px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: #fbfcfb; color: var(--ink);
+}
+.search-input:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(0,137,61,.15);
+}
+.search-btn {
+  font: inherit; font-weight: 600; font-size: 15px;
+  padding: 11px 22px; cursor: pointer;
+  color: #fff; background: var(--brand);
+  border: none; border-radius: 10px;
+  transition: background .15s ease;
+}
+.search-btn:hover { background: var(--brand-dark); }
+.search-btn:disabled { opacity: .6; cursor: default; }
+.search-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+/* ---- badge naposledy vyhledaneho materialu ---- */
+.searched-box {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  min-width: 180px;
+  padding: 16px 22px;
+  background: var(--surface);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.searched-box[hidden] { display: none; }
+.searched-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--brand);
+}
+.searched-value {
+  font-size: 20px; font-weight: 700; letter-spacing: .02em;
+  font-family: "Consolas", "SF Mono", ui-monospace, monospace;
+  word-break: break-all;
+}
+
+/* ---- stav ---- */
+.status { margin: 22px 0 12px; font-size: 14px; font-weight: 600; }
+.status-loading { color: var(--ink-soft); }
+.status-ok      { color: var(--brand); }
+.status-empty   { color: var(--ink-soft); }
+.status-error   { color: #c0392b; }
+
+/* ---- prepinaci zalozky PN ---- */
+.pn-tabs {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 18px 0 12px;
+}
+.pn-tabs[hidden] { display: none; }
+.pn-tab {
+  font: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 8px 16px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--ink);
+  font-family: "Consolas", ui-monospace, monospace;
+  transition: border-color .12s ease, background .12s ease, color .12s ease;
+}
+.pn-tab:hover { border-color: var(--brand); }
+.pn-tab-active {
+  background: var(--brand); border-color: var(--brand); color: #fff;
+}
+
+/* ---- INLINE KIOSK (vsazene IMT pod inputem) ---- */
+.kiosk {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+.kiosk[hidden] { display: none; }
+
+.kiosk-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  height: 46px; padding: 0 16px;
+  background: var(--brand-dark); color: #fff;
+}
+.kiosk-title {
+  font-weight: 700; font-size: 13.5px; letter-spacing: .03em;
+  font-family: "Consolas", ui-monospace, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.kiosk-frame {
+  width: 100%; height: 78vh; min-height: 520px;
+  border: 0; display: block; background: #fff;
+}
+
+/* ---- footer ---- */
+footer { border-top: 1px solid var(--line); }
+footer .wrap {
+  display: flex; justify-content: space-between;
+  padding: 18px 28px; font-size: 12.5px; color: var(--ink-soft);
+}

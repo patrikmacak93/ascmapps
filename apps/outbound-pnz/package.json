@@ -1,0 +1,18 @@
+{
+  "name": "outbound-pnz-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend aplikace Outbound-PNZ. Podle local_material vyhleda pres ASCM sql-connector zaznamy v tabulce outbound.pnzListSAP_zcze_sd_pn a vrati IMT odkazy (imt_url).",
+  "main": "server/server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.2"
+  },
+  "license": "ISC"
+}

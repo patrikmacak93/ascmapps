@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outbound PNZ</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- horni lista -->
+  <header class="topbar">
+    <div class="wrap">
+      <div class="wordmark">Schaeffler Frenštát pod Radhoštěm<small>Supply&nbsp;Chain</small></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-meta">Interní portál</div>
+    </div>
+  </header>
+
+  <!-- nadpis stranky -->
+  <div class="page-head">
+    <div class="wrap">
+      <a class="btn-back" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6"/>
+        </svg>
+        Zpět na rozcestník
+      </a>
+      <h1>Outbound PNZ</h1>
+      <p>Naskenuj etiketu nebo zadej materiálové číslo (local_material) – IMT se zobrazí rovnou pod vyhledáváním.</p>
+    </div>
+  </div>
+
+  <main>
+    <div class="wrap">
+
+      <!-- vyhledavaci formular + badge s naposledy vyhledanym materialem -->
+      <div class="search-area">
+        <div class="search-card">
+          <label for="materialInput" class="search-label">local_material / sken etikety</label>
+          <div class="search-row">
+            <input type="search" id="materialInput" class="search-input"
+                   placeholder="klikni sem a naskenuj etiketu, nebo zadej materiál"
+                   autocomplete="off" autofocus>
+            <button type="button" id="searchBtn" class="search-btn">Vyhledat</button>
+          </div>
+          <p class="search-hint">Naskenuj etiketu (local_material se vyparsuje sám) nebo zadej materiál a stiskni Enter. Pole se po vyhledání vymaže.</p>
+        </div>
+
+        <div id="searchedBox" class="searched-box" hidden>
+          <span class="searched-label">Vyhledáno</span>
+          <span class="searched-value" id="searchedValue"></span>
+        </div>
+      </div>
+
+      <!-- stav -->
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+
+      <!-- prepinac PN (jen kdyz ma material vic prirazenych PN) -->
+      <div id="pnTabs" class="pn-tabs" hidden></div>
+
+      <!-- INLINE KIOSK - vsazene IMT pod inputem, nacte se automaticky
+           po vyhledani (prvni PN), prepina se pres zalozky vyse. -->
+      <div id="kiosk" class="kiosk" hidden>
+        <div class="kiosk-bar">
+          <span class="kiosk-title" id="kioskTitle">IMT</span>
+        </div>
+        <iframe id="kioskFrame" class="kiosk-frame" title="IMT" src="about:blank"></iframe>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>SCM Reporting · interní použití</span>
+      <span id="year"></span>
+    </div>
+  </footer>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

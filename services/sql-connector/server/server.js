@@ -15,6 +15,7 @@ const requestLogger = require('./middleware/requestLogger');
 const apiKeyAuth = require('./middleware/apiKeyAuth');
 const errorHandler = require('./middleware/errorHandler');
 const { getHealth, getHealthDb } = require('./controllers/healthController');
+const outboundPnzRoutes = require('./routes/outboundPnz');
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use('/api/v1', budgetRoutes);
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', pckDatabaseRoutes);
 app.use('/api/v1', agvListRoutes);
+app.use('/api/v1', outboundPnzRoutes);
 
 // Až přibudou další skupiny endpointů, přidají se stejným způsobem:
 // const ordersRoutes = require('./routes/orders');
