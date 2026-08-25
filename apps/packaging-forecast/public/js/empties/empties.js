@@ -19,7 +19,12 @@ function getEmptiesColumnText(col) {
 }
 
 export function initEmptiesTab() {
-  $("loadEmptiesBtn").addEventListener("click", loadEmptiesData);
+  // Tlacitko "Nacist Empties" uz v HTML neni (Empties se nacitaji automaticky
+  // v ramci loadAllData). Kdyby tam bylo, napojime ho - proto ta podminka.
+  const loadEmptiesBtn = $("loadEmptiesBtn");
+  if (loadEmptiesBtn) loadEmptiesBtn.addEventListener("click", loadEmptiesData);
+
+  // "Pridat radek" zustava.
   $("addEmptiesBtn").addEventListener("click", addEmptyRow);
 }
 

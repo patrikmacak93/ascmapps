@@ -73,7 +73,11 @@ const EXTRA_COLUMNS = [
 ];
 
 export function initBudgetTab() {
-  $("loadBudgetBtn").addEventListener("click", loadBudgetData);
+  // Tlacitko "Nacist Budget" uz v HTML neni (data se nacitaji automaticky
+  // pri startu a rucne pres jedno tlacitko "Aktualizovat data" v hlavicce).
+  // Kdyby tam ale bylo, jeste ho napojime - proto ta podminka.
+  const loadBudgetBtn = $("loadBudgetBtn");
+  if (loadBudgetBtn) loadBudgetBtn.addEventListener("click", loadBudgetData);
 
   const columnsBtn = $("budgetColumnsFilterBtn");
   columnsBtn.addEventListener("click", (e) => {
