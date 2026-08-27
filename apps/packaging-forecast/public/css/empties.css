@@ -60,7 +60,7 @@
 }
 
 /* Tlačítko "Upravit" v prvním sloupci tabulky ---------------------------- */
-.empties-action-col { width: 1%; white-space: nowrap; }
+.empties-action-col { width: 168px; white-space: nowrap; }
 .empties-action-cell { white-space: nowrap; }
 
 .btn-empties-edit,
