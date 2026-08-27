@@ -102,4 +102,21 @@ async function updateEmpty(req, res, next) {
   }
 }
 
-module.exports = { getEmpties, createEmpty, updateEmpty };
+async function deleteEmpty(req, res, next) {
+  const id = Number(req.params.id);
+
+  if (!Number.isFinite(id)) return res.status(400).json({ error: 'Neplatné EmptiesID.' });
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`DELETE FROM [FSTASCM].[pckForecast].[Empties] WHERE EmptiesID = @id`);
+
+    res.status(200).json({ deletedRows: result.rowsAffected?.[0] ?? 0 });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getEmpties, createEmpty, updateEmpty, deleteEmpty };
