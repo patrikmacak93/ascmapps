@@ -138,7 +138,7 @@
         <div class="panel">
           <h3>Empties</h3>
           <div class="empties-tools">
-            <button class="btn-primary" id="addEmptiesBtn">Přidat řádek</button>
+            <button class="btn-primary" id="addEmptiesBtn">Přidat záznam</button>
             <span class="status" id="emptiesStatus">Načítám Empties…</span>
           </div>
           <div class="table-wrapper">
@@ -177,6 +177,44 @@
     </div>
   </div>
 </div>
+
+<!-- ===============================================================
+     PANEL PRO ÚPRAVU ZÁZNAMU EMPTIES
+     Vyjíždí zprava po kliknutí na "Upravit" v prvním sloupci tabulky
+     (stejně jako úprava záznamu v obalové databázi). Pole generuje
+     js/empties/empties.js. Je na úrovni <body>, aby ho nikdy neschovalo
+     přepínání záložek.
+     =============================================================== -->
+<div id="emptiesRecordBackdrop" class="record-backdrop" hidden></div>
+
+<aside id="emptiesRecordPanel" class="record-panel" role="dialog" aria-modal="true"
+       aria-labelledby="emptiesRecordTitle" hidden>
+
+  <header class="record-head">
+    <div>
+      <span id="emptiesRecordMode" class="record-mode"></span>
+      <h2 id="emptiesRecordTitle">Upravit záznam</h2>
+    </div>
+    <button type="button" id="emptiesRecordClose" class="record-close"
+            aria-label="Zavřít panel">&times;</button>
+  </header>
+
+  <div class="record-body">
+    <nav id="emptiesRecordNav" class="record-nav" aria-label="Skupiny polí"></nav>
+    <form id="emptiesRecordForm" class="record-form">
+      <input type="hidden" id="f-EmptiesID" name="EmptiesID">
+      <!-- fieldsety generuje empties.js -->
+    </form>
+  </div>
+
+  <footer class="record-foot">
+    <div id="emptiesRecordMessage" class="record-message" role="status"></div>
+    <div class="record-actions">
+      <button type="button" id="emptiesRecordCancel">Zrušit</button>
+      <button type="submit" form="emptiesRecordForm" id="emptiesRecordSave" class="primary">Uložit změny</button>
+    </div>
+  </footer>
+</aside>
 
 <script type="module" src="js/main.js"></script>
 </body>
