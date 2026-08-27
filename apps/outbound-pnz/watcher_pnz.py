@@ -13,8 +13,8 @@ Char20 -> record_type (konstanta, např. „ZPNZ_PR“)
 CHAR35 -> local_material (materiálové číslo)
 Text 42 -> assigned_pn (přiřazené PN, např. „PNZ5405“); pokud je
 v buňce více hodnot oddělených čárkou/středníkem
-(např. „PNE16007, PNZ8650“), každá se uloží
-jako samostatný řádek
+(např. „PNE16007, PNZ8650“), uloží se jen první,
+zbytek se zahodí (do logu se zapíše upozornění)
 c -> prázdný sloupec, ignoruje se
 
 Sloupec imt_url se dopočítává z assigned_pn. Jedná se o odkaz do IMT
@@ -317,20 +317,24 @@ def parse_pnz_html(html):
             )
             continue
 
+        # Z více PN v jedné buňce se ukládá JEN PRVNÍ; zbytek se zahodí,
+        # ať je každý local_material v tabulce právě jednou. Zahozené PN
+        # se zaloguje kvůli dohledatelnosti.
+        assigned_pn = assigned_parts[0]
         if len(assigned_parts) > 1:
             warnings.append(
                 f"{local_material}: v Text 42 je více PN "
-                f"{assigned_parts} – ukládám všechny."
+                f"{assigned_parts} – ukládám jen první ({assigned_pn}), "
+                f"zbytek zahazuji."
             )
 
-        for assigned_pn in assigned_parts:
-            rows.append(
-                {
-                    "record_type": record_type,
-                    "local_material": local_material,
-                    "assigned_pn": assigned_pn,
-                }
-            )
+        rows.append(
+            {
+                "record_type": record_type,
+                "local_material": local_material,
+                "assigned_pn": assigned_pn,
+            }
+        )
 
     if not saw_header:
         warnings.append(
