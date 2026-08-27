@@ -207,6 +207,20 @@ router.put("/empties/:id", async (req, res) => {
   }
 });
 
+router.delete("/empties/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "Neplatné EmptiesID." });
+
+  try {
+    const vysledek = await volatConnector(`/empties/${id}`, { method: "DELETE" });
+    res.json({ ok: true, deletedRows: vysledek.deletedRows });
+  } catch (err) {
+    console.error("CHYBA DELETE /api/empties/:id:", err.message);
+    res.status(err.statusCode || 500).json({ error: "Chyba při mazání záznamu.", detail: err.message });
+  }
+});
+
 /* ===========================================================
    GET /api/budget
    -----------------------------------------------------------
