@@ -75,6 +75,11 @@ WATCH_DIR = (
 )
 
 LOG_PATH = os.path.join(WATCH_DIR, "pnz_watch.log")
+# Stavový log (LOG_PATH) zůstává ve WATCH_DIR. Chybový log jde vždy vedle
+# skriptu (tam, kde leží watchery), aby byly chyby pohromadě a nezmizely,
+# když je WATCH_DIR síťová/sdílená složka.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ERROR_LOG_PATH = os.path.join(SCRIPT_DIR, "pnz_watch.error.log")
 MAX_LOG_LINES = 500
 
 # Vzor v názvu souboru, který skript zpracovává (case-insensitive).
@@ -140,6 +145,20 @@ def log(msg):
             _trim_log_file(LOG_PATH)
 
     except PermissionError:
+        pass
+
+
+def log_error(msg):
+    """Chybový log -> ERROR_LOG_PATH (složka se skriptem). Chyby jsou vzácné,
+    takže se ořezává při každém zápisu (žádný čítač není potřeba)."""
+    line = f"[{datetime.now().isoformat()}] {msg}"
+    print(line, flush=True)
+
+    try:
+        with open(ERROR_LOG_PATH, "a", encoding="utf-8") as file:
+            file.write(line + "\n")
+        _trim_log_file(ERROR_LOG_PATH)
+    except (PermissionError, OSError):
         pass
 
 
@@ -281,6 +300,7 @@ def parse_pnz_html(html):
     """
     warnings = []
     rows = []
+    multi_pn_count = 0  # kolik řádků mělo v Text 42 víc PN (souhrn místo hlášky/řádek)
 
     if "<td" in html.lower():
         parsed_rows, saw_header = _extract_rows_td(html)
@@ -318,15 +338,12 @@ def parse_pnz_html(html):
             continue
 
         # Z více PN v jedné buňce se ukládá JEN PRVNÍ; zbytek se zahodí,
-        # ať je každý local_material v tabulce právě jednou. Zahozené PN
-        # se zaloguje kvůli dohledatelnosti.
+        # ať je každý local_material v tabulce právě jednou. NELOGUJE se to
+        # po řádcích (byly by z toho tisíce hlášek a log o stovkách kB) -
+        # jen se spočítá a na konci se zaloguje jedna souhrnná hláška.
         assigned_pn = assigned_parts[0]
         if len(assigned_parts) > 1:
-            warnings.append(
-                f"{local_material}: v Text 42 je více PN "
-                f"{assigned_parts} – ukládám jen první ({assigned_pn}), "
-                f"zbytek zahazuji."
-            )
+            multi_pn_count += 1
 
         rows.append(
             {
@@ -334,6 +351,12 @@ def parse_pnz_html(html):
                 "local_material": local_material,
                 "assigned_pn": assigned_pn,
             }
+        )
+
+    if multi_pn_count:
+        warnings.append(
+            f"{multi_pn_count} řádků mělo v Text 42 více PN – "
+            "uložena jen první, zbytek zahozen."
         )
 
     if not saw_header:
@@ -482,7 +505,7 @@ def enforce_done_retention():
                 f'(nad limit {DONE_RETENTION}): "{filename}"'
             )
         except OSError as error:
-            log(
+            log_error(
                 f'CHYBA při mazání starého souboru v Done '
                 f'"{filename}": {error}'
             )
@@ -610,8 +633,8 @@ def handle_file(engine, path, last_processed, in_progress):
         )
 
     except Exception as error:  # noqa: BLE001
-        log(f'CHYBA při zpracování "{filename}": {error}')
-        log(traceback.format_exc())
+        log_error(f'CHYBA při zpracování "{filename}": {error}')
+        log_error(traceback.format_exc())
 
     finally:
         in_progress.discard(path)
