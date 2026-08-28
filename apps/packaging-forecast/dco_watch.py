@@ -77,6 +77,11 @@ TARGET_SCHEMA = "pckForecast"
 # nasleduji WATCH_DIR, ne umisteni skriptu.
 WATCH_DIR = os.environ.get("DCO_WATCH_DIR") or os.path.dirname(os.path.abspath(__file__))
 LOG_PATH = os.path.join(WATCH_DIR, "dco_watch.log")
+# Stavovy log (LOG_PATH) zustava ve WATCH_DIR. Chybovy log jde vzdy vedle
+# skriptu (tam, kde lezi watchery), aby byly chyby pohromade a nezmizely
+# v pripade, ze je WATCH_DIR sitova/sdilena slozka.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ERROR_LOG_PATH = os.path.join(SCRIPT_DIR, "dco_watch.error.log")
 MAX_LOG_LINES = 500
 
 # Nazev souboru -> cilova tabulka. Prvni shoda vyhrava.
@@ -95,7 +100,7 @@ STABLE_ROUNDS = 2
 CHUNKSIZE = 5000
 
 DONE_DIR = os.path.join(WATCH_DIR, "Done")
-DONE_RETENTION = 10  # kolik poslednich souboru se drzi v Done na kazdy job (FST / HRU zvlast)
+DONE_RETENTION = 2  # kolik poslednich souboru se drzi v Done na kazdy job (FST / HRU zvlast)
 
 # ---------------------------------------------------------------------------
 # Logovani
@@ -111,15 +116,25 @@ def _trim_log_file(path, max_lines=MAX_LOG_LINES):
     except FileNotFoundError:
         pass
 
+def _write_log(path, line):
+    try:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+        _trim_log_file(path)
+    except (PermissionError, OSError):
+        pass
+
 def log(msg):
+    """Stavovy/informacni log -> LOG_PATH (WATCH_DIR)."""
     line = f"[{datetime.now().isoformat()}] {msg}"
     print(line, flush=True)
-    try:
-        with open(LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
-        _trim_log_file(LOG_PATH)
-    except PermissionError:
-        pass
+    _write_log(LOG_PATH, line)
+
+def log_error(msg):
+    """Chybovy log -> ERROR_LOG_PATH (slozka se skriptem)."""
+    line = f"[{datetime.now().isoformat()}] {msg}"
+    print(line, flush=True)
+    _write_log(ERROR_LOG_PATH, line)
 
 # ---------------------------------------------------------------------------
 # Parser SAP HTML exportu
@@ -367,7 +382,7 @@ def enforce_done_retention(table_name):
             os.remove(full)
             log(f'Smazan stary soubor v Done (nad limit {DONE_RETENTION}): "{f}"')
         except OSError as err:
-            log(f'CHYBA pri mazani stareho souboru v Done "{f}": {err}')
+            log_error(f'CHYBA pri mazani stareho souboru v Done "{f}": {err}')
 
 # ---------------------------------------------------------------------------
 # Hlidani slozky
@@ -433,8 +448,8 @@ def handle_file(engine, path, last_processed, in_progress):
         last_processed[path] = mtime_after
         log(f'Hotovo: "{filename}" -> {TARGET_SCHEMA}.{table_name} ({count} radku).')
     except Exception as err:  # noqa: BLE001 - chceme zalogovat a pokracovat ve sledovani
-        log(f'CHYBA pri zpracovani "{filename}": {err}')
-        log(traceback.format_exc())
+        log_error(f'CHYBA pri zpracovani "{filename}": {err}')
+        log_error(traceback.format_exc())
     finally:
         in_progress.discard(path)
 
