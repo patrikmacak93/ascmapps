@@ -622,10 +622,13 @@ def handle_file(engine, path, last_processed, in_progress):
             )
             return
 
-        mtime_after = os.path.getmtime(path)
         count = process_file(engine, path)
 
-        last_processed[path] = mtime_after
+        # Soubor je po zpracování přesunut do Done. Kdybychom si pamatovali
+        # jeho mtime, stejný soubor vložený znovu (kopie si nese původní
+        # "date modified" => stejné mtime) by byl přeskočen jako už
+        # zpracovaný. Proto cestu po úspěchu z paměti zahodíme.
+        last_processed.pop(path, None)
 
         log(
             f'Hotovo: "{filename}" -> '
