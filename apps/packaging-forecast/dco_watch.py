@@ -443,9 +443,12 @@ def handle_file(engine, path, last_processed, in_progress):
             log(f'Soubor "{filename}" zmizel pred zpracovanim, preskakuji.')
             return
 
-        mtime_after = os.path.getmtime(path)
         count = process_file(engine, path, table_name)
-        last_processed[path] = mtime_after
+        # Soubor je po zpracovani presunut do Done, takze si jeho cestu v
+        # pameti nedrzime. Jinak by stejny soubor vlozeny znovu (kopie ma
+        # stejne "date modified" => stejne mtime) byl povazovan za uz
+        # zpracovany a byl by preskocen.
+        last_processed.pop(path, None)
         log(f'Hotovo: "{filename}" -> {TARGET_SCHEMA}.{table_name} ({count} radku).')
     except Exception as err:  # noqa: BLE001 - chceme zalogovat a pokracovat ve sledovani
         log_error(f'CHYBA pri zpracovani "{filename}": {err}')
