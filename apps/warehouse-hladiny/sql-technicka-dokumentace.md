@@ -42,7 +42,7 @@ hranaté závorky u každého odkazu). Schéma je camelCase v souladu se stávaj
 - **Plný refresh.** Importní tabulky se při každém vložení reportu přepíšou celé
 (`DELETE` + `INSERT` v jedné transakci). Žádný merge, žádné delty.
 - **`loaded_at`** u každé importní tabulky = čas nahrání dávky.
-- **Množstevní typ** je jednotně `DECIMAL(18,3)`.
+- **Množstevní typ** je jednotně `DECIMAL(18)`.
 - `aktualni_hladiny` se **výpočtem nikdy nepřepisuje** – zůstává obrazem SAPu
 a mění se až příštím importem, jakmile SAP nové hladiny převezme.
 
@@ -82,10 +82,8 @@ Report se rozpadá do dlouhého formátu: jeden řádek = jeden materiál × jed
 `period_index = 0` je **nejbližší** týden (první týdenní sloupec), `period_label`
 se skládá jako `"cw <týden>/<rok>"` a slouží jen ke čtení.
 
-> **Předpoklad k ověření:** `period_index = 0` je aktuální týden jen pokud první
-> týdenní sloupec exportu je vždy aktuální týden. Na dalším týdenním exportu
-> ověř, že se okno posouvá (další report začne `W 38/2026`), aby „následující
-> 4 týdny" (index 0..3) pořád seděly.
+> **period_index = 0:** je aktuální týden kdy report vznikl
+> Čtyřtýdenní okno sloužící pro výpočet jsou indexy 1-4.
 
 ### 2.3 `Job_ASCM_NEW_HLADINY__Step_1.htm` → `nove_hladiny`
 
@@ -111,7 +109,7 @@ jako kontrola.
 | `material` | `VARCHAR(40)` | NE | PK |
 | `plant` | `VARCHAR(10)` | ANO | |
 | `storage_type` | `VARCHAR(10)` | ANO | atribut, ne klíč |
-| `current_level` | `DECIMAL(18,3)` | NE | sloupec `VALUE` z reportu |
+| `current_level` | `DECIMAL(18)` | NE | sloupec `VALUE` z reportu |
 | `loaded_at` | `DATETIME2(0)` | NE | |
 
 ### 3.2 `potreby` — PK `(material, period_index)`
@@ -134,7 +132,7 @@ index pro filtr prvních 4 týdnů ve výpočtu.
 | `material` | `VARCHAR(40)` | NE | PK |
 | `plant` | `VARCHAR(10)` | ANO | `"*"`/prázdné → NULL |
 | `storage_type` | `VARCHAR(10)` | ANO | |
-| `total_stock` | `DECIMAL(18,3)` | ANO | |
+| `total_stock` | `DECIMAL(18)` | ANO | |
 | `base_unit` | `VARCHAR(10)` | ANO | |
 | `loaded_at` | `DATETIME2(0)` | NE | |
 
@@ -158,10 +156,10 @@ takže zůstává historie/audit.
 |---|---|---|---|
 | `run_at` | `DATETIME2(0)` | NE | čas běhu; PK |
 | `material` | `VARCHAR(40)` | NE | PK |
-| `current_level` | `DECIMAL(18,3)` | ANO | hladina před výpočtem |
+| `current_level` | `DECIMAL(18)` | ANO | hladina před výpočtem |
 | `q3` | `DECIMAL(18,3)` | ANO | výsledná (2denní) hladina z kvartilu |
 | `pct_change` | `DECIMAL(9,4)` | ANO | `(q3 − current)/current` |
-| `new_level` | `DECIMAL(18,3)` | ANO | výsledek; `NULL` = nenastaveno |
+| `new_level` | `DECIMAL(18)` | ANO | výsledek; `NULL` = nenastaveno |
 | `action_label` | `NVARCHAR(60)` | NE | slovní důvod |
 | `approved_at` | `DATETIME2(0)` | ANO | doplněno `04_export_sap.sql` |
 | `approved_by` | `NVARCHAR(128)` | ANO | doplněno `04_export_sap.sql` |
@@ -176,7 +174,7 @@ Poslední tři sloupce přidává `04_export_sap.sql` idempotentně
 |---|---|---|---|
 | `export_at` | `DATETIME2(0)` | NE | čas exportu; PK |
 | `material` | `VARCHAR(40)` | NE | PK |
-| `new_level` | `DECIMAL(18,3)` | NE | |
+| `new_level` | `DECIMAL(18)` | NE | |
 | `action_label` | `NVARCHAR(60)` | NE | |
 | `run_at` | `DATETIME2(0)` | NE | z kterého běhu řádek pochází |
 
