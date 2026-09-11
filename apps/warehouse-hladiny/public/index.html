@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skladové hladiny</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- horni lista -->
+<header class="topbar">
+<div class="wrap">
+<div class="wordmark">Schaeffler Frenštát pod Radhoštěm<small>Supply&nbsp;Chain</small></div>
+<div class="topbar-spacer"></div>
+<div class="topbar-meta">Interní portál</div>
+</div>
+</header>
+
+<!-- nadpis stranky -->
+<div class="page-head">
+<div class="wrap">
+<a class="btn-back" href="/">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M19 12H5M11 18l-6-6 6-6"/>
+</svg>
+Zpět na rozcestník
+</a>
+<h1>Skladové hladiny</h1>
+<p>Návrh přepočtu skladových hladin z týdenních potřeb (IQR / kvartil&nbsp;Q3).
+Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
+</div>
+</div>
+
+<main>
+<div class="wrap">
+
+<!-- ovladaci listva: vyber behu + stav + aktualizace -->
+<div class="controls">
+<label class="run-label" for="runSelect">Běh výpočtu</label>
+<select id="runSelect" class="run-select" aria-label="Běh výpočtu"></select>
+<span id="runMeta" class="run-meta"></span>
+<div class="controls-spacer"></div>
+<button type="button" id="refreshBtn" class="wh-btn">Aktualizovat</button>
+</div>
+
+<p id="status" class="status" role="status" aria-live="polite"></p>
+
+<!-- souhrnne karty (KPI) + rozdeleni podle duvodu -->
+<section id="summarySection" class="summary" hidden>
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="dist-card">
+<div class="dist-head">
+<span>Rozdělení podle důvodu</span>
+<span class="dist-hint">klikni pro filtr tabulky</span>
+</div>
+<div id="distBars" class="dist-bars"></div>
+</div>
+</section>
+
+<!-- tabulka vypoctu -->
+<section class="table-section" hidden id="tableSection">
+<div class="table-toolbar">
+<div class="wh-search-wrap">
+<input type="search" id="searchInput" class="wh-search"
+placeholder="Hledat materiál…" aria-label="Hledat materiál">
+</div>
+<span id="activeFilter" class="active-filter" hidden></span>
+<div class="controls-spacer"></div>
+<span id="rowCount" class="row-count"></span>
+</div>
+
+<div class="table-container">
+<table id="whTable">
+<thead>
+<tr>
+<th class="sortable" data-key="material">Materiál</th>
+<th class="sortable num" data-key="current_level">Aktuální</th>
+<th class="sortable num" data-key="q3">Q3 → 2&nbsp;dny</th>
+<th class="sortable num" data-key="new_level">Nová</th>
+<th class="sortable num" data-key="pct_change">Změna</th>
+<th class="sortable" data-key="action_label">Důvod</th>
+<th>Stav</th>
+</tr>
+</thead>
+<tbody id="whBody">
+<tr><td colspan="7" class="wh-message">Načítám data…</td></tr>
+</tbody>
+</table>
+</div>
+
+<nav class="pagination" aria-label="Stránkování">
+<button type="button" id="prevPage" class="wh-btn">&laquo; Předchozí</button>
+<span id="pageInfo" aria-live="polite"></span>
+<button type="button" id="nextPage" class="wh-btn">Další &raquo;</button>
+</nav>
+</section>
+
+</div>
+</main>
+
+<!-- ============ DETAIL MATERIALU (vizualizace vypoctu) ============ -->
+<div id="drawer" class="drawer" role="dialog" aria-modal="true"
+aria-labelledby="drawerTitle" hidden>
+<div id="drawerBackdrop" class="drawer-backdrop"></div>
+<aside class="drawer-panel">
+<header class="drawer-header">
+<div>
+<div class="drawer-eyebrow">Materiál</div>
+<h2 id="drawerTitle"></h2>
+</div>
+<button type="button" id="drawerClose" class="drawer-close"
+aria-label="Zavřít detail">&times;</button>
+</header>
+<div id="drawerBody" class="drawer-body"></div>
+</aside>
+</div>
+
+<footer>
+<div class="wrap">
+<span>SCM Reporting · interní použití</span>
+<span id="year"></span>
+</div>
+</footer>
+
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
