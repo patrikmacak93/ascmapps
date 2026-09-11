@@ -15,7 +15,7 @@ const requestLogger = require('./middleware/requestLogger');
 const apiKeyAuth = require('./middleware/apiKeyAuth');
 const errorHandler = require('./middleware/errorHandler');
 const { getHealth, getHealthDb } = require('./controllers/healthController');
-const outboundPnzRoutes = require('./routes/outboundPnz');
+
 
 const app = express();
 
@@ -52,11 +52,8 @@ const projectsRoutes = require('./routes/projects');
 const emptiesRoutes = require('./routes/empties');
 const budgetRoutes = require('./routes/budget');
 const agvListRoutes = require('./routes/agvList');
-console.log('agvListRoutes loaded:', agvListRoutes);
-
-// Obalová databáze (dřív Node-RED na portu 1884):
-//   authRoutes        -> POST /api/v1/login          (dřív /login)
-//   pckDatabaseRoutes -> GET/POST/PUT/DELETE /api/v1/pck-database
+const outboundPnzRoutes = require('./routes/outboundPnz');
+const warehouseHladinyRoutes = require('./routes/warehouseHladiny')
 const authRoutes = require('./routes/auth');
 const pckDatabaseRoutes = require('./routes/pckDatabase');
 
@@ -69,6 +66,7 @@ app.use('/api/v1', authRoutes);
 app.use('/api/v1', pckDatabaseRoutes);
 app.use('/api/v1', agvListRoutes);
 app.use('/api/v1', outboundPnzRoutes);
+app.use('/api/v1, warehouseHladinyRoutes');
 
 // Až přibudou další skupiny endpointů, přidají se stejným způsobem:
 // const ordersRoutes = require('./routes/orders');
