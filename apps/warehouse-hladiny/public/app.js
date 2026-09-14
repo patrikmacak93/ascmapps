@@ -342,6 +342,7 @@ const bw = Math.min(26, slot * 0.62);
 const winEnd = WINDOW_START + WINDOW_LEN - 1;
 let bars = '';
 let labels = '';
+let hits = '';
 rows.forEach((r, i) => {
 const val = Number(r.requirement_qty) || 0;
 const x = padL + slot * i + (slot - bw) / 2;
@@ -354,6 +355,9 @@ bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" 
 const short = String(r.period_label || r.period_index).replace(/^cw\s*/i, '').split('/')[0];
 const cx = padL + slot * i + slot / 2;
 labels += `<text x="${cx.toFixed(1)}" y="${(baseY + 14).toFixed(1)}" text-anchor="middle" font-size="9" fill="${inWin ? 'var(--brand-dark)' : '#96a19a'}">${escapeHtml(short)}</text>`;
+// neviditelna "hit" zona pres cely tydenni sloupec - kvuli tenkym sloupcum
+// se snadno trefi hover; nese data pro tooltip (tyden + hodnota).
+hits += `<rect class="wh-bar-hit" data-week="${escapeHtml(String(r.period_label || ('týden ' + r.period_index)))}" data-qty="${val}" data-inwin="${inWin ? '1' : '0'}" x="${(padL + slot * i).toFixed(1)}" y="${padT.toFixed(1)}" width="${slot.toFixed(1)}" height="${plotH.toFixed(1)}"></rect>`;
 });
 
 // vyznaceni okna (podklad)
@@ -374,12 +378,13 @@ const qy = baseY - (q3weekly / maxVal) * plotH;
 q3line = `<line x1="${padL}" y1="${qy.toFixed(1)}" x2="${W - padR}" y2="${qy.toFixed(1)}" stroke="var(--down)" stroke-width="1.6" stroke-dasharray="5 4"></line>`;
 }
 
-return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Graf týdenních potřeb">
+return `<svg class="wh-demand-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graf týdenních potřeb">
 ${winRect}
 <line x1="${padL}" y1="${baseY}" x2="${W - padR}" y2="${baseY}" stroke="var(--line)" stroke-width="1"></line>
 ${bars}
 ${q3line}
 ${labels}
+${hits}
 </svg>`;
 }
 
@@ -470,7 +475,7 @@ const verdict = vp ? `
 
 const chart = `
 <div class="detail-block-title">Týdenní potřeby (forecast)</div>
-<div class="chart-card">${demandChartSvg(potreby, q3w)}</div>
+<div class="chart-card wh-demand">${demandChartSvg(potreby, q3w)}<div class="wh-tip" hidden></div></div>
 <div class="chart-legend">
 <span class="lg"><span class="lg-swatch" style="background:var(--brand)"></span>4týdenní okno</span>
 <span class="lg"><span class="lg-swatch" style="background:#c3d0c8"></span>ostatní týdny</span>
@@ -492,6 +497,7 @@ const potrebyNote = potreby.length
 : '';
 
 drawerBody.innerHTML = nums + verdict + chart + band + steps + meta + potrebyNote;
+wireChartTooltip();
 } catch (err) {
 drawerBody.innerHTML = `<p class="note" style="color:var(--down)">Chyba: ${escapeHtml(err.message)}</p>`;
 }
@@ -504,6 +510,34 @@ if (kind === 'down') return 'Nová hladina je pod pásmem tolerance – snižuje
 if (kind === 'dead') return 'Bez potřeb na 18 týdnů – hladina se sráží na 0.';
 if (kind === 'new') return 'Materiál bez dosavadní hladiny – nasazuje se spočtená hodnota.';
 return 'Rozdíl je uvnitř pásma ±20 % – hladina zůstává beze změny.';
+}
+
+// Napoji hover tooltip na graf tydennich potreb. Pri najeti na sloupec
+// (resp. na cely tydenni sloupec) ukaze tyden + hodnotu requirementu.
+function wireChartTooltip() {
+const card = drawerBody.querySelector('.wh-demand');
+if (!card) return;
+const tip = card.querySelector('.wh-tip');
+if (!tip) return;
+
+card.querySelectorAll('.wh-bar-hit').forEach((hit) => {
+hit.addEventListener('mouseenter', () => {
+const week = hit.getAttribute('data-week') || '';
+const qty = Number(hit.getAttribute('data-qty'));
+const inWin = hit.getAttribute('data-inwin') === '1';
+tip.innerHTML =
+`<span class="wh-tip-week">${escapeHtml(week)}</span>` +
+`<span class="wh-tip-qty">${fmt(qty, true)} ks</span>` +
+(inWin ? '<span class="wh-tip-win">ve výpočetním okně</span>' : '');
+tip.hidden = false;
+});
+hit.addEventListener('mousemove', (e) => {
+const box = card.getBoundingClientRect();
+tip.style.left = (e.clientX - box.left) + 'px';
+tip.style.top = (e.clientY - box.top - 12) + 'px';
+});
+hit.addEventListener('mouseleave', () => { tip.hidden = true; });
+});
 }
 
 function closeDrawer() { drawer.hidden = true; drawerBody.innerHTML = ''; }
