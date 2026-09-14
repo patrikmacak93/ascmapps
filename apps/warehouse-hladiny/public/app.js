@@ -75,9 +75,12 @@ return String(v == null ? '' : v)
 const nf0 = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
 const nf3 = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 3 });
 
+// Vsechna mnozstvi se zobrazuji jako cela cisla zaokrouhlena NAHORU
+// (kus navic je vzdy lepsi nez kus chybejici). Parametr dec uz nema vliv -
+// zustava jen kvuli kompatibilite se starsimi volanimi.
 function fmt(v, dec) {
 if (v == null || v === '' || Number.isNaN(Number(v))) return '—';
-return (dec ? nf3 : nf0).format(Number(v));
+return nf0.format(Math.ceil(Number(v)));
 }
 
 function fmtPct(v) {
@@ -317,7 +320,7 @@ return v[lo] + (pos - lo) * (v[hi] - v[lo]);
 function demandChartSvg(potreby, opts) {
 opts = opts || {};
 const factor = opts.factor || 1;
-const qLine = (opts.qLine != null && isFinite(opts.qLine)) ? Number(opts.qLine) : null;
+const qLine = (opts.qLine != null && isFinite(opts.qLine)) ? Math.ceil(Number(opts.qLine)) : null;
 const qSolid = !!opts.qSolid;
 const W = 640, H = 220, padL = 28, padR = 12, padT = 16, padB = 40;
 const plotW = W - padL - padR, plotH = H - padT - padB;
@@ -326,7 +329,7 @@ const baseY = padT + plotH;
 const rows = potreby.slice().sort((a, b) => a.period_index - b.period_index);
 if (!rows.length) return '<p class="note">Týdenní potřeby pro tento materiál nejsou v aktuálním importu.</p>';
 
-const maxVal = Math.max(1, ...rows.map((r) => (Number(r.requirement_qty) || 0) * factor), qLine || 0);
+const maxVal = Math.max(1, ...rows.map((r) => Math.ceil((Number(r.requirement_qty) || 0) * factor)), qLine || 0);
 const n = rows.length;
 const slot = plotW / n;
 const bw = Math.min(26, slot * 0.62);
@@ -336,7 +339,7 @@ let bars = '';
 let labels = '';
 let hits = '';
 rows.forEach((r, i) => {
-const val = (Number(r.requirement_qty) || 0) * factor;
+const val = Math.ceil((Number(r.requirement_qty) || 0) * factor);
 const x = padL + slot * i + (slot - bw) / 2;
 const h = (val / maxVal) * plotH;
 const y = baseY - h;
@@ -612,7 +615,7 @@ function buildExportXls(rows) {
 const body = rows.map((r) => {
 const typ = String(r.storage_type || '').trim();
 const mat = String(r.material || '').trim().toUpperCase();
-const avg = r.avg_weekly == null ? 0 : Number(r.avg_weekly);
+const avg = r.avg_weekly == null ? 0 : Math.ceil(Number(r.avg_weekly));
 return '<Row>' +
 `<Cell ss:StyleID="sText"><Data ss:Type="String">${xmlEsc(typ)}</Data></Cell>` +
 `<Cell><Data ss:Type="String">${xmlEsc(mat)}</Data></Cell>` +
