@@ -464,3 +464,17 @@ thead th.col-exc { font-size: 11px; }
 .exc-box:disabled { opacity: .45; cursor: wait; }
 tbody tr:has(.exc-box:checked) { background: #fbf6ec; }
 tbody tr:has(.exc-box:checked) .mat-cell { font-style: italic; }
+
+/* řádek filtrů v hlavičce tabulky */
+thead tr.filter-row th {
+position: sticky; top: 38px; z-index: 1;
+background: #fafcfb; padding: 6px 8px; border-bottom: 1px solid var(--line);
+}
+.th-filter {
+width: 100%; font: inherit; font-size: 12px; font-weight: 400;
+padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px;
+background: #fff; color: var(--ink); text-transform: none; letter-spacing: 0;
+}
+.th-filter:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px rgba(0,137,61,.15); }
+thead tr.filter-row th.col-exc { text-align: center; }
+#excAll { width: 17px; height: 17px; }

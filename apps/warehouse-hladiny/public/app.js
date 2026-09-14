@@ -36,7 +36,7 @@ const sumGrid = document.getElementById('sumGrid');
 const sumTotal = document.getElementById('sumTotal');
 
 const tableSection = document.getElementById('tableSection');
-const searchInput = document.getElementById('searchInput');
+
 const activeFilterEl = document.getElementById('activeFilter');
 const rowCountEl = document.getElementById('rowCount');
 const whBody = document.getElementById('whBody');
@@ -165,7 +165,7 @@ populateTypeFilter();
 // reset filtru/strankovani pri zmene behu
 actionFilter = null;
 searchTerm = '';
-searchInput.value = '';
+
 page = 1;
 renderTable();
 
@@ -213,6 +213,8 @@ btn.addEventListener('click', () => {
 const label = btn.getAttribute('data-label');
 actionFilter = actionFilter === label ? null : label;
 page = 1;
+const fd = document.getElementById('fDuvod');
+if (fd) fd.value = actionFilter || '';
 renderSummary(lastSummary);
 renderTable();
 });
@@ -262,6 +264,7 @@ return `<tr data-material="${escapeHtml(r.material)}">
 <td class="num">${r.new_level == null ? '<span class="muted">—</span>' : fmt(r.new_level)}</td>
 <td class="num ${pctCls}">${fmtPct(r.pct_change)}</td>
 <td><span class="badge badge-${kind}">${escapeHtml(r.action_label)}</span></td>
+<td class="muted">${escapeHtml(r.storage_type || '—')}</td>
 <td class="col-exc"><input type="checkbox" class="exc-box" data-material="${escapeHtml(r.material)}"${r.is_vyjimka ? ' checked' : ''} title="Vyloučit z automatické kalkulace"></td>
 </tr>`;
 }).join('');
@@ -277,6 +280,7 @@ box.addEventListener('change', () => ulozVyjimku(box.getAttribute('data-material
 });
 }
 
+syncMaster();
 rowCountEl.textContent = `${nf0.format(rows.length)} ${rows.length === 1 ? 'řádek' : rows.length >= 2 && rows.length <= 4 ? 'řádky' : 'řádků'}`;
 pageInfo.textContent = `Strana ${page} / ${pages}`;
 prevPage.disabled = page <= 1;
@@ -582,17 +586,80 @@ if (box) box.disabled = false;
 }
 }
 
+
+/* ==================== HROMADNA vyjimka ====================
+Checkbox v hlavicce sloupce Vyjimka aplikuje zmenu na CELY aktualne
+filtrovany vyber (ne jen na zobrazenou stranku). Pred zapisem se ptame
+na potvrzeni s konkretnim poctem. */
+
+async function hromadnaVyjimka(zapnuto, master) {
+const rows = currentRows();
+if (!rows.length) { setStatus('Filtru neodpovídá žádný materiál.', 'empty'); syncMaster(); return; }
+
+// menit chceme jen ty, u kterych se stav realne lisi
+const cile = rows.filter((r) => !!r.is_vyjimka !== zapnuto).map((r) => r.material);
+if (!cile.length) { setStatus('Všechny materiály ve filtru už mají požadovaný stav.', 'ok'); syncMaster(); return; }
+
+const akce = zapnuto ? 'nastavit výjimku' : 'zrušit výjimku';
+if (!window.confirm(`Opravdu ${akce} pro ${nf0.format(cile.length)} materiálů?\n\nPlatí pro celý filtrovaný výběr, ne jen pro tuto stránku.`)) {
+syncMaster();
+return;
+}
+
+if (master) master.disabled = true;
+setStatus(`Ukládám ${nf0.format(cile.length)} změn…`, 'loading');
+try {
+const res = await fetch(`${API_BASE}/vyjimky/hromadne`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ materials: cile, zapnuto, poznamka: 'Hromadně z portálu' }),
+});
+const body = await res.json().catch(() => ({}));
+if (!res.ok) throw new Error(body.error || `Server odpověděl chybou ${res.status}.`);
+
+const set = new Set(cile);
+allRows.forEach((r) => { if (set.has(r.material)) r.is_vyjimka = zapnuto ? 1 : 0; });
+renderTable();
+setStatus(`${zapnuto ? 'Nastaveno' : 'Zrušeno'} ${nf0.format(cile.length)} výjimek (projeví se příštím výpočtem).`, 'ok');
+} catch (err) {
+setStatus(`Hromadnou změnu se nepodařilo uložit: ${err.message}`, 'error');
+renderTable();
+} finally {
+if (master) master.disabled = false;
+}
+}
+
+// Stav master checkboxu podle filtrovaneho vyberu (vc. neurciteho stavu).
+function syncMaster() {
+const master = document.getElementById('excAll');
+if (!master) return;
+const rows = currentRows();
+const s = rows.filter((r) => r.is_vyjimka).length;
+master.checked = rows.length > 0 && s === rows.length;
+master.indeterminate = s > 0 && s < rows.length;
+}
+
 /* ==================== typ skladu ==================== */
 
 function populateTypeFilter() {
-const sel = document.getElementById('typeFilter');
-if (!sel) return;
+const fTyp = document.getElementById('fTyp');
+const fDuvod = document.getElementById('fDuvod');
+if (fTyp) {
 const types = Array.from(new Set(allRows.map((r) => String(r.storage_type || '').trim()).filter(Boolean)))
 .sort((a, b) => a.localeCompare(b, 'cs'));
 const keep = typeFilter;
-sel.innerHTML = '<option value="">Všechny typy skladu</option>' +
-types.map((t) => `<option value="${escapeHtml(t)}">Typ skladu ${escapeHtml(t)}</option>`).join('');
-if (keep && types.includes(keep)) sel.value = keep; else typeFilter = '';
+fTyp.innerHTML = '<option value="">vše</option>' +
+types.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+if (keep && types.includes(keep)) fTyp.value = keep; else typeFilter = '';
+}
+if (fDuvod) {
+const labels = Array.from(new Set(allRows.map((r) => r.action_label).filter(Boolean)))
+.sort((a, b) => a.localeCompare(b, 'cs'));
+const keep = actionFilter;
+fDuvod.innerHTML = '<option value="">vše</option>' +
+labels.map((l) => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+if (keep && labels.includes(keep)) fDuvod.value = keep; else actionFilter = null;
+}
 }
 
 /* ==================== NAPOVEDA k vypoctu ==================== */
@@ -691,11 +758,6 @@ setStatus(`Vyexportováno ${nf0.format(rows.length)} řádků.`, 'ok');
 runSelect.addEventListener('change', () => loadRun(runSelect.value));
 refreshBtn.addEventListener('click', () => loadRun(currentRunAt || runSelect.value));
 
-searchInput.addEventListener('input', () => {
-searchTerm = searchInput.value.trim();
-page = 1;
-renderTable();
-});
 
 document.querySelectorAll('th.sortable').forEach((th) => {
 th.addEventListener('click', () => {
@@ -714,8 +776,21 @@ drawerClose.addEventListener('click', closeDrawer);
 drawerBackdrop.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !drawer.hidden) closeDrawer(); });
 
-const typeSel = document.getElementById('typeFilter');
-if (typeSel) typeSel.addEventListener('change', () => { typeFilter = typeSel.value; page = 1; renderTable(); });
+const fMaterial = document.getElementById('fMaterial');
+if (fMaterial) fMaterial.addEventListener('input', () => { searchTerm = fMaterial.value.trim(); page = 1; renderTable(); });
+
+const fTyp = document.getElementById('fTyp');
+if (fTyp) fTyp.addEventListener('change', () => { typeFilter = fTyp.value; page = 1; renderTable(); });
+
+const fDuvod = document.getElementById('fDuvod');
+if (fDuvod) fDuvod.addEventListener('change', () => {
+actionFilter = fDuvod.value || null; page = 1;
+if (lastSummary.length) renderSummary(lastSummary);
+renderTable();
+});
+
+const excAll = document.getElementById('excAll');
+if (excAll) excAll.addEventListener('change', () => hromadnaVyjimka(excAll.checked, excAll));
 
 const pageSel = document.getElementById('pageSize');
 if (pageSel) pageSel.addEventListener('change', () => {

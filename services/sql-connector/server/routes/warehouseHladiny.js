@@ -14,6 +14,7 @@ getSummary,
 getMaterialDetail,
 getVyjimky,
 setVyjimka,
+setVyjimkyHromadne,
 } = require('../controllers/warehouseHladinyController');
 
 // GET /api/v1/warehouse-hladiny/runs -> seznam behu vypoctu
@@ -33,5 +34,8 @@ router.get('/warehouse-hladiny/vyjimky', getVyjimky);
 
 // POST /api/v1/warehouse-hladiny/vyjimky -> zapnout/vypnout vyjimku
 router.post('/warehouse-hladiny/vyjimky', setVyjimka);
+
+// POST /api/v1/warehouse-hladiny/vyjimky/hromadne -> hromadne nastaveni
+router.post('/warehouse-hladiny/vyjimky/hromadne', setVyjimkyHromadne);
 
 module.exports = router;

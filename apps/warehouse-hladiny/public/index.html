@@ -62,11 +62,6 @@ Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 <!-- tabulka vypoctu -->
 <section class="table-section" hidden id="tableSection">
 <div class="table-toolbar">
-<select id="typeFilter" class="wh-select" aria-label="Typ skladu"><option value="">Všechny typy skladu</option></select>
-<div class="wh-search-wrap">
-<input type="search" id="searchInput" class="wh-search"
-placeholder="Hledat materiál…" aria-label="Hledat materiál">
-</div>
 <span id="activeFilter" class="active-filter" hidden></span>
 <div class="controls-spacer"></div>
 <span id="rowCount" class="row-count"></span>
@@ -86,11 +81,19 @@ placeholder="Hledat materiál…" aria-label="Hledat materiál">
 <th class="sortable num" data-key="new_level">Nová</th>
 <th class="sortable num" data-key="pct_change">Změna</th>
 <th class="sortable" data-key="action_label">Důvod</th>
+<th class="sortable" data-key="storage_type">Typ skladu</th>
 <th class="col-exc" title="Vyloučit z automatické kalkulace">Výjimka</th>
+</tr>
+<tr class="filter-row">
+<th><input type="search" id="fMaterial" class="th-filter" placeholder="hledat…" aria-label="Filtr materiálu"></th>
+<th></th><th></th><th></th>
+<th><select id="fDuvod" class="th-filter" aria-label="Filtr důvodu"><option value="">vše</option></select></th>
+<th><select id="fTyp" class="th-filter" aria-label="Filtr typu skladu"><option value="">vše</option></select></th>
+<th class="col-exc"><input type="checkbox" id="excAll" class="exc-box" title="Nastavit/zrušit výjimku pro celý filtrovaný výběr"></th>
 </tr>
 </thead>
 <tbody id="whBody">
-<tr><td colspan="6" class="wh-message">Načítám data…</td></tr>
+<tr><td colspan="7" class="wh-message">Načítám data…</td></tr>
 </tbody>
 </table>
 </div>

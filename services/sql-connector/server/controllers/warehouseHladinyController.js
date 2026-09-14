@@ -251,11 +251,61 @@ res.status(200).json({ material, zapnuto });
 } catch (err) { next(err); }
 }
 
+/* ===========================================================================
+POST /api/v1/warehouse-hladiny/vyjimky/hromadne
+{ materials: [...], zapnuto: bool, poznamka, uzivatel }
+Hromadne nastaveni/zruseni vyjimky. Zapisuje po davkach (CHUNK), aby
+dotaz nenarazil na limit parametru ani na delku SQL.
+=========================================================================== */
+async function setVyjimkyHromadne(req, res, next) {
+const body = req.body || {};
+const zapnuto = !!body.zapnuto;
+const poznamka = body.poznamka || null;
+const uzivatel = body.uzivatel || null;
+const materials = Array.isArray(body.materials)
+? Array.from(new Set(body.materials.map((m) => String(m || '').trim()).filter(Boolean)))
+: [];
+
+if (!materials.length) return res.status(400).json({ error: 'Chybi seznam materialu.' });
+
+const CHUNK = 500;
+try {
+const pool = await poolPromise;
+let zpracovano = 0;
+
+for (let i = 0; i < materials.length; i += CHUNK) {
+const davka = materials.slice(i, i + CHUNK);
+const rq = pool.request();
+const jmena = davka.map((m, j) => {
+rq.input('m' + j, sql.VarChar(40), m);
+return '@m' + j;
+});
+rq.input('poznamka', sql.NVarChar(200), poznamka);
+rq.input('uzivatel', sql.NVarChar(128), uzivatel);
+
+if (zapnuto) {
+// vlozime jen ty, ktere jeste vyjimku nemaji (idempotentne)
+await rq.query(`
+INSERT INTO ${T_VYJIMKY} (material, poznamka, created_by)
+SELECT x.material, @poznamka, @uzivatel
+FROM (VALUES ${jmena.map((n) => `(${n})`).join(',')}) AS x(material)
+WHERE NOT EXISTS (SELECT 1 FROM ${T_VYJIMKY} v WHERE v.material = x.material);`);
+} else {
+await rq.query(`DELETE FROM ${T_VYJIMKY} WHERE material IN (${jmena.join(',')});`);
+}
+zpracovano += davka.length;
+}
+
+res.status(200).json({ zpracovano, zapnuto });
+} catch (err) { next(err); }
+}
+
 module.exports = {
 getRuns,
 getVypocet,
 getVyjimky,
 setVyjimka,
+setVyjimkyHromadne,
 getSummary,
 getMaterialDetail,
 };
