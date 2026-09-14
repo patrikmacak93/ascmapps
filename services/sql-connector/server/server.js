@@ -66,7 +66,7 @@ app.use('/api/v1', authRoutes);
 app.use('/api/v1', pckDatabaseRoutes);
 app.use('/api/v1', agvListRoutes);
 app.use('/api/v1', outboundPnzRoutes);
-app.use('/api/v1, warehouseHladinyRoutes');
+app.use('/api/v1', warehouseHladinyRoutes);
 
 // Až přibudou další skupiny endpointů, přidají se stejným způsobem:
 // const ordersRoutes = require('./routes/orders');
