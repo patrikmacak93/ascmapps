@@ -84,10 +84,19 @@ DECLARE @target DATETIME2(0) = @run;
 IF @target IS NULL
 SET @target = (SELECT MAX(run_at) FROM ${T_VYPOCET});
 
-SELECT ${VYPOCET_COLS}
-FROM ${T_VYPOCET}
-WHERE run_at = @target
-ORDER BY action_label, material;`);
+SELECT v.run_at, v.material, v.current_level, v.q3, v.pct_change, v.new_level,
+v.action_label, v.approved_at, v.approved_by, v.exported_at,
+ah.storage_type,
+p.avg_weekly
+FROM ${T_VYPOCET} AS v
+LEFT JOIN ${SCHEMA}.[aktualni_hladiny] AS ah ON ah.material = v.material
+LEFT JOIN (
+SELECT material, AVG(CAST(requirement_qty AS DECIMAL(18,3))) AS avg_weekly
+FROM ${T_POTREBY}
+GROUP BY material
+) AS p ON p.material = v.material
+WHERE v.run_at = @target
+ORDER BY v.action_label, v.material;`);
 
 res.status(200).json({
 count: result.recordset.length,

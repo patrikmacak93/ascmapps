@@ -319,9 +319,11 @@ box-shadow: 0 6px 18px rgba(1,59,28,.28);
 display: flex; flex-direction: column; gap: 1px;
 }
 .wh-tip[hidden] { display: none; }
-.wh-tip-week { font-weight: 700; }
+.wh-tip-week { font-weight: 700; margin-bottom: 2px; }
+.wh-tip-row { font-size: 12px; }
+.wh-tip-row b { font-family: var(--mono); font-weight: 700; }
 .wh-tip-qty { font-family: var(--mono); }
-.wh-tip-win { font-size: 10px; opacity: .82; }
+.wh-tip-win { font-size: 10px; opacity: .82; margin-top: 2px; }
 .chart-legend {
 display: flex; flex-wrap: wrap; gap: 14px; padding: 6px 4px 4px; font-size: 12px; color: var(--ink-soft);
 }
@@ -361,3 +363,96 @@ footer .wrap {
 display: flex; justify-content: space-between;
 padding: 18px 28px; font-size: 12.5px; color: var(--ink-soft);
 }
+
+/* ============================================================
+Nápověda, sloučený souhrn, toolbar, modály
+============================================================ */
+.help-btn {
+margin-top: 8px; font: inherit; font-size: 12.5px; font-weight: 600;
+display: inline-flex; align-items: center; gap: 7px;
+padding: 6px 13px; cursor: pointer;
+border: 1px solid var(--line); border-radius: 999px;
+background: var(--surface); color: var(--ink-soft);
+}
+.help-btn:hover { border-color: var(--brand); color: var(--brand); }
+.help-btn span { font-weight: 700; color: var(--brand); }
+
+/* sloučený souhrn */
+.sum-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sum-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.sum-total { font-size: 13px; font-weight: 700; color: var(--brand-dark); }
+.sum-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px;
+}
+.sum-card {
+font: inherit; text-align: left; cursor: pointer;
+display: flex; flex-direction: column; gap: 6px;
+background: var(--surface); border: 1px solid var(--line);
+border-left: 4px solid var(--c, var(--brand));
+border-radius: 12px; box-shadow: var(--shadow); padding: 13px 15px;
+transition: box-shadow .15s ease, border-color .15s ease;
+}
+.sum-card:hover { box-shadow: var(--shadow-lift); }
+.sum-card.active { border-color: var(--c); background: #f2f8f4; }
+.sum-card-top { display: flex; align-items: baseline; justify-content: space-between; }
+.sum-card-n { font-size: 23px; font-weight: 700; letter-spacing: -.01em; }
+.sum-card-pct { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.sum-card-label { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.sum-card-track { height: 5px; background: #eef1f0; border-radius: 999px; overflow: hidden; }
+.sum-card-fill { display: block; height: 100%; background: var(--c); border-radius: 999px; }
+
+/* toolbar */
+.wh-select {
+font: inherit; font-size: 13px; padding: 8px 11px;
+border: 1px solid var(--line); border-radius: 10px; background: #fbfcfb; color: var(--ink);
+}
+.wh-select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,137,61,.15); }
+.wh-btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.wh-btn-primary:hover:not(:disabled) { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; }
+
+/* modály */
+.modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; }
+.modal[hidden] { display: none; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(1,32,16,.45); }
+.modal-panel {
+position: relative; background: var(--bg); border-radius: 16px;
+width: min(680px, 100%); max-height: 86vh; display: flex; flex-direction: column;
+box-shadow: 0 24px 60px rgba(1,59,28,.3); overflow: hidden;
+}
+.modal-narrow { width: min(440px, 100%); }
+.modal-header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 16px 22px; background: var(--brand-dark); color: #fff;
+}
+.modal-header h2 { margin: 0; font-size: 18px; }
+.modal-close {
+background: none; border: none; color: #fff; font-size: 26px; line-height: 1;
+cursor: pointer; opacity: .85; padding: 0 2px;
+}
+.modal-close:hover { opacity: 1; }
+.modal-body { padding: 20px 22px 24px; overflow-y: auto; }
+.modal-lead { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
+.help-example {
+background: #f0f6f2; border: 1px solid #d6e7dc; border-radius: 12px;
+padding: 14px 16px; margin: 16px 0 10px;
+}
+.help-example-title {
+font-size: 11px; font-weight: 700; text-transform: uppercase;
+letter-spacing: .07em; color: var(--brand-dark); margin-bottom: 6px;
+}
+.help-example p { margin: 5px 0; font-size: 13.5px; }
+
+.radio-row {
+display: flex; gap: 11px; align-items: flex-start; cursor: pointer;
+background: var(--surface); border: 1px solid var(--line);
+border-radius: 12px; padding: 13px 15px; margin-bottom: 10px;
+}
+.radio-row:hover { border-color: var(--brand); }
+.radio-row input { margin-top: 3px; }
+.radio-row b { display: block; font-size: 14px; }
+.radio-row small { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.radio-row input:disabled + span { opacity: .5; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+/* legenda: plná čára pro Q3 */
+.lg-line-solid { border-top: 2px solid var(--brand-dark); }

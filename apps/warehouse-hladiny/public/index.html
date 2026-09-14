@@ -29,6 +29,7 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 Zpět na rozcestník
 </a>
 <h1>Skladové hladiny</h1>
+<button type="button" id="helpBtn" class="help-btn" aria-haspopup="dialog"><span aria-hidden="true">?</span> Jak se hladina počítá</button>
 <p>Návrh přepočtu skladových hladin z týdenních potřeb (IQR / kvartil&nbsp;Q3).
 Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 </div>
@@ -50,20 +51,18 @@ Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 
 <!-- souhrnne karty (KPI) + rozdeleni podle duvodu -->
 <section id="summarySection" class="summary" hidden>
-<div class="kpi-row" id="kpiRow"></div>
-
-<div class="dist-card">
-<div class="dist-head">
-<span>Rozdělení podle důvodu</span>
+<div class="sum-head">
+<span class="sum-title">Rozdělení návrhů</span>
+<span class="sum-total" id="sumTotal"></span>
 <span class="dist-hint">klikni pro filtr tabulky</span>
 </div>
-<div id="distBars" class="dist-bars"></div>
-</div>
+<div id="sumGrid" class="sum-grid"></div>
 </section>
 
 <!-- tabulka vypoctu -->
 <section class="table-section" hidden id="tableSection">
 <div class="table-toolbar">
+<select id="typeFilter" class="wh-select" aria-label="Typ skladu"><option value="">Všechny typy skladu</option></select>
 <div class="wh-search-wrap">
 <input type="search" id="searchInput" class="wh-search"
 placeholder="Hledat materiál…" aria-label="Hledat materiál">
@@ -71,6 +70,11 @@ placeholder="Hledat materiál…" aria-label="Hledat materiál">
 <span id="activeFilter" class="active-filter" hidden></span>
 <div class="controls-spacer"></div>
 <span id="rowCount" class="row-count"></span>
+<select id="pageSize" class="wh-select" aria-label="Položek na stránku">
+<option value="25">25 / str.</option><option value="50" selected>50 / str.</option>
+<option value="100">100 / str.</option><option value="250">250 / str.</option>
+<option value="all">Vše</option></select>
+<button type="button" id="exportBtn" class="wh-btn wh-btn-primary">Export</button>
 </div>
 
 <div class="table-container">
@@ -79,15 +83,13 @@ placeholder="Hledat materiál…" aria-label="Hledat materiál">
 <tr>
 <th class="sortable" data-key="material">Materiál</th>
 <th class="sortable num" data-key="current_level">Aktuální</th>
-<th class="sortable num" data-key="q3">Q3 → 2&nbsp;dny</th>
 <th class="sortable num" data-key="new_level">Nová</th>
 <th class="sortable num" data-key="pct_change">Změna</th>
 <th class="sortable" data-key="action_label">Důvod</th>
-<th>Stav</th>
 </tr>
 </thead>
 <tbody id="whBody">
-<tr><td colspan="7" class="wh-message">Načítám data…</td></tr>
+<tr><td colspan="5" class="wh-message">Načítám data…</td></tr>
 </tbody>
 </table>
 </div>
@@ -125,6 +127,41 @@ aria-label="Zavřít detail">&times;</button>
 <span id="year"></span>
 </div>
 </footer>
+
+
+<!-- ===== NAPOVEDA: jak se pocita hladina ===== -->
+<div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+<div class="modal-backdrop" data-close="help"></div>
+<div class="modal-panel">
+<header class="modal-header">
+<h2 id="helpTitle">Jak vzniká nová hladina</h2>
+<button type="button" class="modal-close" data-close="help" aria-label="Zavřít">&times;</button>
+</header>
+<div class="modal-body" id="helpBody"></div>
+</div>
+</div>
+
+<!-- ===== EXPORT ===== -->
+<div id="exportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle" hidden>
+<div class="modal-backdrop" data-close="export"></div>
+<div class="modal-panel modal-narrow">
+<header class="modal-header">
+<h2 id="exportTitle">Export do SAP předlohy</h2>
+<button type="button" class="modal-close" data-close="export" aria-label="Zavřít">&times;</button>
+</header>
+<div class="modal-body">
+<p class="modal-lead">Vyber, které materiály se mají vyexportovat.</p>
+<label class="radio-row"><input type="radio" name="expScope" value="current" checked>
+<span><b>Jen aktuální typ skladu</b><small id="expCurrentInfo"></small></span></label>
+<label class="radio-row"><input type="radio" name="expScope" value="all">
+<span><b>Všechny typy skladu</b><small id="expAllInfo"></small></span></label>
+<div class="modal-actions">
+<button type="button" class="wh-btn" data-close="export">Zrušit</button>
+<button type="button" id="exportRun" class="wh-btn wh-btn-primary">Stáhnout</button>
+</div>
+</div>
+</div>
+</div>
 
 <script src="./config.js"></script>
 <script src="./app.js"></script>

@@ -22,7 +22,7 @@ const API_BASE = CFG.API_BASE || './api';
 const WINDOW_START = Number.isFinite(CFG.WINDOW_START) ? CFG.WINDOW_START : 1;
 const WINDOW_LEN = Number.isFinite(CFG.WINDOW_LEN) ? CFG.WINDOW_LEN : 4;
 const BAND = Number.isFinite(CFG.BAND) ? CFG.BAND : 0.2;
-const PAGE_SIZE = 50;
+let PAGE_SIZE = 50;
 
 // --- prvky DOM ---
 const runSelect = document.getElementById('runSelect');
@@ -31,8 +31,9 @@ const refreshBtn = document.getElementById('refreshBtn');
 const statusEl = document.getElementById('status');
 
 const summarySection = document.getElementById('summarySection');
-const kpiRow = document.getElementById('kpiRow');
-const distBars = document.getElementById('distBars');
+
+const sumGrid = document.getElementById('sumGrid');
+const sumTotal = document.getElementById('sumTotal');
 
 const tableSection = document.getElementById('tableSection');
 const searchInput = document.getElementById('searchInput');
@@ -59,6 +60,8 @@ let sortKey = 'action_label';
 let sortDir = 1; // 1 = asc, -1 = desc
 let searchTerm = '';
 let actionFilter = null;
+let typeFilter = '';
+let lastSummary = [];
 let page = 1;
 
 /* ============================ pomocnici ============================ */
@@ -155,6 +158,7 @@ currentRunAt = vypocet.run_at || runAt;
 allRows = vypocet.data || [];
 
 renderSummary(summary);
+populateTypeFilter();
 // reset filtru/strankovani pri zmene behu
 actionFilter = null;
 searchTerm = '';
@@ -178,51 +182,37 @@ setStatus(`Chyba: ${err.message}`, 'error');
 /* ============================ souhrn ============================ */
 
 function renderSummary(summary) {
-const byLabel = summary || [];
-const total = byLabel.reduce((s, x) => s + Number(x.pocet || 0), 0);
+lastSummary = summary || [];
+const total = lastSummary.reduce((a, x) => a + Number(x.pocet || 0), 0);
+sumTotal.textContent = `${nf0.format(total)} materiálů`;
 
-// KPI karty: celkem + agregace po kategoriich (up/down/flat/dead/new)
-const kinds = { up: 0, down: 0, flat: 0, dead: 0, new: 0 };
-byLabel.forEach((x) => { kinds[actionKind(x.action_label)] += Number(x.pocet || 0); });
+const max = Math.max(1, ...lastSummary.map((x) => Number(x.pocet || 0)));
+// seradime od nejcetnejsiho, at je hned videt, co dominuje
+const rows = lastSummary.slice().sort((a, b) => Number(b.pocet || 0) - Number(a.pocet || 0));
 
-const kpis = [
-{ label: 'Materiálů', value: total, color: 'var(--brand)' },
-{ label: 'Navýšeno', value: kinds.up, color: KIND_COLOR.up },
-{ label: 'Poníženo', value: kinds.down, color: KIND_COLOR.down },
-{ label: 'Beze změny', value: kinds.flat, color: KIND_COLOR.flat },
-{ label: 'Mrtvé', value: kinds.dead, color: KIND_COLOR.dead },
-{ label: 'Nové', value: kinds.new, color: KIND_COLOR.new },
-];
-kpiRow.innerHTML = kpis.map((k) =>
-`<div class="kpi" style="--kpi-color:${k.color}">
-<div class="kpi-value">${nf0.format(k.value)}</div>
-<div class="kpi-label">${escapeHtml(k.label)}</div>
-</div>`
-).join('');
-
-// Rozdeleni po presnych action_label (klikaci -> filtr tabulky)
-const maxCount = Math.max(1, ...byLabel.map((x) => Number(x.pocet || 0)));
-distBars.innerHTML = byLabel.map((x) => {
+sumGrid.innerHTML = rows.map((x) => {
 const kind = actionKind(x.action_label);
-const pct = (Number(x.pocet || 0) / maxCount) * 100;
+const pocet = Number(x.pocet || 0);
+const pct = total ? (pocet / total) * 100 : 0;
 const active = actionFilter === x.action_label ? ' active' : '';
-return `<div class="dist-row${active}" data-label="${escapeHtml(x.action_label)}" role="button" tabindex="0">
-<span class="dist-name"><span class="dist-dot" style="background:${KIND_COLOR[kind]}"></span>${escapeHtml(x.action_label)}</span>
-<span class="dist-track"><span class="dist-fill" style="width:${pct}%;background:${KIND_COLOR[kind]}"></span></span>
-<span class="dist-count">${nf0.format(Number(x.pocet || 0))}</span>
-</div>`;
+return `<button type="button" class="sum-card${active}" data-label="${escapeHtml(x.action_label)}" style="--c:${KIND_COLOR[kind]}">
+<span class="sum-card-top">
+<span class="sum-card-n">${nf0.format(pocet)}</span>
+<span class="sum-card-pct">${pct.toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %</span>
+</span>
+<span class="sum-card-label">${escapeHtml(x.action_label)}</span>
+<span class="sum-card-track"><span class="sum-card-fill" style="width:${(pocet / max) * 100}%"></span></span>
+</button>`;
 }).join('');
 
-distBars.querySelectorAll('.dist-row').forEach((row) => {
-const label = row.getAttribute('data-label');
-const toggle = () => {
+sumGrid.querySelectorAll('.sum-card').forEach((btn) => {
+btn.addEventListener('click', () => {
+const label = btn.getAttribute('data-label');
 actionFilter = actionFilter === label ? null : label;
 page = 1;
-renderSummary(summary); // prekresli aktivni stav
+renderSummary(lastSummary);
 renderTable();
-};
-row.addEventListener('click', toggle);
-row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+});
 });
 }
 
@@ -231,6 +221,7 @@ row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ')
 function currentRows() {
 let rows = allRows;
 if (actionFilter) rows = rows.filter((r) => r.action_label === actionFilter);
+if (typeFilter) rows = rows.filter((r) => String(r.storage_type || '') === typeFilter);
 if (searchTerm) {
 const t = searchTerm.toLowerCase();
 rows = rows.filter((r) => String(r.material || '').toLowerCase().includes(t));
@@ -250,30 +241,24 @@ return rows;
 
 function renderTable() {
 const rows = currentRows();
-const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+const size = PAGE_SIZE === 'all' ? Math.max(rows.length, 1) : PAGE_SIZE;
+const pages = Math.max(1, Math.ceil(rows.length / size));
 if (page > pages) page = pages;
 const start = (page - 1) * PAGE_SIZE;
 const pageRows = rows.slice(start, start + PAGE_SIZE);
 
 if (!rows.length) {
-whBody.innerHTML = `<tr><td colspan="7" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
+whBody.innerHTML = `<tr><td colspan="5" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
 } else {
 whBody.innerHTML = pageRows.map((r) => {
 const kind = actionKind(r.action_label);
 const pctCls = r.pct_change > 0 ? 'pct-up' : r.pct_change < 0 ? 'pct-down' : 'muted';
-const stav = r.exported_at
-? '<span class="state-chip ok">Exportováno</span>'
-: r.approved_at
-? '<span class="state-chip ok">Schváleno</span>'
-: '<span class="state-chip">Návrh</span>';
 return `<tr data-material="${escapeHtml(r.material)}">
 <td class="mat-cell">${escapeHtml(r.material)}</td>
 <td class="num">${fmt(r.current_level)}</td>
-<td class="num">${fmt(r.q3)}</td>
 <td class="num">${r.new_level == null ? '<span class="muted">—</span>' : fmt(r.new_level)}</td>
 <td class="num ${pctCls}">${fmtPct(r.pct_change)}</td>
 <td><span class="badge badge-${kind}">${escapeHtml(r.action_label)}</span></td>
-<td>${stav}</td>
 </tr>`;
 }).join('');
 
@@ -325,16 +310,23 @@ if (lo === hi) return v[lo];
 return v[lo] + (pos - lo) * (v[hi] - v[lo]);
 }
 
-// SVG sloupcovy graf tydennich potreb se zvyraznenym oknem + carka Q3.
-function demandChartSvg(potreby, q3weekly) {
-const W = 640, H = 240, padL = 28, padR = 12, padT = 16, padB = 40;
+// SVG sloupcovy graf potreb se zvyraznenym oknem. Parametrizovany:
+// opts.factor - prepocet hodnot (1 = tydenni, 2/7 = 2denni ekvivalent)
+// opts.qLine - hodnota vodorovne Q3 cary (uz v jednotkach grafu), nebo null
+// opts.qSolid - true = plna cara (autoritativni q3), false = carkovana (orientacni)
+function demandChartSvg(potreby, opts) {
+opts = opts || {};
+const factor = opts.factor || 1;
+const qLine = (opts.qLine != null && isFinite(opts.qLine)) ? Number(opts.qLine) : null;
+const qSolid = !!opts.qSolid;
+const W = 640, H = 220, padL = 28, padR = 12, padT = 16, padB = 40;
 const plotW = W - padL - padR, plotH = H - padT - padB;
 const baseY = padT + plotH;
 
 const rows = potreby.slice().sort((a, b) => a.period_index - b.period_index);
 if (!rows.length) return '<p class="note">Týdenní potřeby pro tento materiál nejsou v aktuálním importu.</p>';
 
-const maxVal = Math.max(1, ...rows.map((r) => Number(r.requirement_qty) || 0), q3weekly || 0);
+const maxVal = Math.max(1, ...rows.map((r) => (Number(r.requirement_qty) || 0) * factor), qLine || 0);
 const n = rows.length;
 const slot = plotW / n;
 const bw = Math.min(26, slot * 0.62);
@@ -344,7 +336,7 @@ let bars = '';
 let labels = '';
 let hits = '';
 rows.forEach((r, i) => {
-const val = Number(r.requirement_qty) || 0;
+const val = (Number(r.requirement_qty) || 0) * factor;
 const x = padL + slot * i + (slot - bw) / 2;
 const h = (val / maxVal) * plotH;
 const y = baseY - h;
@@ -357,7 +349,7 @@ const cx = padL + slot * i + slot / 2;
 labels += `<text x="${cx.toFixed(1)}" y="${(baseY + 14).toFixed(1)}" text-anchor="middle" font-size="9" fill="${inWin ? 'var(--brand-dark)' : '#96a19a'}">${escapeHtml(short)}</text>`;
 // neviditelna "hit" zona pres cely tydenni sloupec - kvuli tenkym sloupcum
 // se snadno trefi hover; nese data pro tooltip (tyden + hodnota).
-hits += `<rect class="wh-bar-hit" data-week="${escapeHtml(String(r.period_label || ('týden ' + r.period_index)))}" data-qty="${val}" data-inwin="${inWin ? '1' : '0'}" x="${(padL + slot * i).toFixed(1)}" y="${padT.toFixed(1)}" width="${slot.toFixed(1)}" height="${plotH.toFixed(1)}"></rect>`;
+hits += `<rect class="wh-bar-hit" data-week="${escapeHtml(String(r.period_label || ('týden ' + r.period_index)))}" data-val="${val}" data-inwin="${inWin ? '1' : '0'}" x="${(padL + slot * i).toFixed(1)}" y="${padT.toFixed(1)}" width="${slot.toFixed(1)}" height="${plotH.toFixed(1)}"></rect>`;
 });
 
 // vyznaceni okna (podklad)
@@ -371,11 +363,14 @@ const ww = slot * (lastWin - firstWin + 1) - 4;
 winRect = `<rect x="${wx.toFixed(1)}" y="${padT}" width="${ww.toFixed(1)}" height="${plotH}" fill="rgba(0,137,61,.07)" rx="6"></rect>`;
 }
 
-// carka Q3 (tydenni)
+// vodorovna Q3 cara (volitelna)
 let q3line = '';
-if (q3weekly != null && q3weekly > 0) {
-const qy = baseY - (q3weekly / maxVal) * plotH;
-q3line = `<line x1="${padL}" y1="${qy.toFixed(1)}" x2="${W - padR}" y2="${qy.toFixed(1)}" stroke="var(--down)" stroke-width="1.6" stroke-dasharray="5 4"></line>`;
+if (qLine != null && qLine > 0) {
+const qy = baseY - (qLine / maxVal) * plotH;
+const col = qSolid ? 'var(--brand-dark)' : 'var(--down)';
+const dash = qSolid ? '' : ' stroke-dasharray="5 4"';
+q3line = `<line x1="${padL}" y1="${qy.toFixed(1)}" x2="${W - padR}" y2="${qy.toFixed(1)}" stroke="${col}" stroke-width="1.6"${dash}></line>`
++ `<text x="${(W - padR).toFixed(1)}" y="${(qy - 4).toFixed(1)}" text-anchor="end" font-size="9" font-weight="700" fill="${col}">Q3 ${escapeHtml(fmt(qLine))}</text>`;
 }
 
 return `<svg class="wh-demand-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graf týdenních potřeb">
@@ -475,11 +470,14 @@ const verdict = vp ? `
 
 const chart = `
 <div class="detail-block-title">Týdenní potřeby (forecast)</div>
-<div class="chart-card wh-demand">${demandChartSvg(potreby, q3w)}<div class="wh-tip" hidden></div></div>
+<div class="chart-card wh-demand" data-metric="Týdenní požadavek">${demandChartSvg(potreby, { factor: 1 })}<div class="wh-tip" hidden></div></div>
+
+<div class="detail-block-title" style="margin-top:18px">Přepočet na 2denní hladinu (× 2 ÷ 7)</div>
+<div class="chart-card wh-demand" data-metric="2denní ekvivalent">${demandChartSvg(potreby, { factor: 2 / 7, qLine: vp && vp.q3 != null ? Number(vp.q3) : null, qSolid: true })}<div class="wh-tip" hidden></div></div>
 <div class="chart-legend">
 <span class="lg"><span class="lg-swatch" style="background:var(--brand)"></span>4týdenní okno</span>
 <span class="lg"><span class="lg-swatch" style="background:#c3d0c8"></span>ostatní týdny</span>
-<span class="lg"><span class="lg-line"></span>kvartil Q3 (týdenní)</span>
+<span class="lg"><span class="lg-line lg-line-solid"></span>Q3 → 2denní hladina (z DB)</span>
 </div>`;
 
 const band = vp && vp.current_level != null && Number(vp.current_level) > 0 && vp.q3 != null ? `
@@ -512,22 +510,22 @@ if (kind === 'new') return 'Materiál bez dosavadní hladiny – nasazuje se spo
 return 'Rozdíl je uvnitř pásma ±20 % – hladina zůstává beze změny.';
 }
 
-// Napoji hover tooltip na graf tydennich potreb. Pri najeti na sloupec
-// (resp. na cely tydenni sloupec) ukaze tyden + hodnotu requirementu.
+// Napoji hover tooltip na grafy potreb (tydenni i 2denni). Pri najeti na
+// sloupec ukaze tyden a hodnotu podle metriky daneho grafu (data-metric).
 function wireChartTooltip() {
-const card = drawerBody.querySelector('.wh-demand');
-if (!card) return;
+drawerBody.querySelectorAll('.wh-demand').forEach((card) => {
 const tip = card.querySelector('.wh-tip');
 if (!tip) return;
+const metric = card.getAttribute('data-metric') || 'Hodnota';
 
 card.querySelectorAll('.wh-bar-hit').forEach((hit) => {
 hit.addEventListener('mouseenter', () => {
 const week = hit.getAttribute('data-week') || '';
-const qty = Number(hit.getAttribute('data-qty'));
+const val = Number(hit.getAttribute('data-val'));
 const inWin = hit.getAttribute('data-inwin') === '1';
 tip.innerHTML =
 `<span class="wh-tip-week">${escapeHtml(week)}</span>` +
-`<span class="wh-tip-qty">${fmt(qty, true)} ks</span>` +
+`<span class="wh-tip-row">${escapeHtml(metric)}: <b>${fmt(val, true)}</b> ks</span>` +
 (inWin ? '<span class="wh-tip-win">ve výpočetním okně</span>' : '');
 tip.hidden = false;
 });
@@ -538,9 +536,111 @@ tip.style.top = (e.clientY - box.top - 12) + 'px';
 });
 hit.addEventListener('mouseleave', () => { tip.hidden = true; });
 });
+});
 }
 
 function closeDrawer() { drawer.hidden = true; drawerBody.innerHTML = ''; }
+
+
+/* ==================== typ skladu ==================== */
+
+function populateTypeFilter() {
+const sel = document.getElementById('typeFilter');
+if (!sel) return;
+const types = Array.from(new Set(allRows.map((r) => String(r.storage_type || '').trim()).filter(Boolean)))
+.sort((a, b) => a.localeCompare(b, 'cs'));
+const keep = typeFilter;
+sel.innerHTML = '<option value="">Všechny typy skladu</option>' +
+types.map((t) => `<option value="${escapeHtml(t)}">Typ skladu ${escapeHtml(t)}</option>`).join('');
+if (keep && types.includes(keep)) sel.value = keep; else typeFilter = '';
+}
+
+/* ==================== NAPOVEDA k vypoctu ==================== */
+
+function helpHtml() {
+const band = Math.round(BAND * 100);
+return `
+<p class="modal-lead">Cílem je držet na skladě zhruba dvoudenní spotřebu podle toho,
+co se má v nejbližších týdnech skutečně odebírat.</p>
+<ol class="steps">
+<li>Vezmeme <b>${WINDOW_LEN} týdny</b> forecastu (indexy ${WINDOW_START}–${WINDOW_START + WINDOW_LEN - 1}).
+Aktuální týden se nepočítá, ten už běží.</li>
+<li>Vynecháme týdny s nulovou potřebou, aby prázdné týdny neshodily výsledek.</li>
+<li>Ze zbylých hodnot vezmeme <b>kvartil Q3</b> (75. percentil) — hodnotu, pod kterou
+leží tři čtvrtiny týdnů. Je odolnější než průměr, ale nepodcení špičky.</li>
+<li>Týdenní číslo přepočteme na <b>2 dny</b>: <b>× 2 ÷ 7</b>, zaokrouhleno nahoru.</li>
+<li>Porovnáme s aktuální hladinou. Když je rozdíl do <b>±${band} %</b>, necháváme
+beze změny — nemá smysl hýbat hladinou kvůli drobnosti.</li>
+</ol>
+<div class="help-example">
+<div class="help-example-title">Příklad</div>
+<p>Týdenní potřeby <b>42,549</b> · <b>17,265</b> · <b>8,178</b> · <b>28,161</b>.
+Seřazeno: 8,178 · 17,265 · 28,161 · 42,549.</p>
+<p>Q3 (75 %) = <b>31,758</b>. Přepočet na 2 dny: 31,758 × 2 ÷ 7 = <b>9,073</b> → nová hladina <b>10</b>.</p>
+<p>Kdyby aktuální hladina byla 9, rozdíl je uvnitř ±${band} % → <i>Beze změny</i>.</p>
+</div>
+<p class="note">Autoritativní hodnoty (Q3, nová hladina, důvod) počítá databázová procedura.
+Grafy v detailu jen ukazují, jak k číslu došlo.</p>`;
+}
+
+function openModal(id) { const m = document.getElementById(id); if (m) m.hidden = false; }
+function closeModal(id) { const m = document.getElementById(id); if (m) m.hidden = true; }
+
+/* ==================== EXPORT do SAP predlohy ====================
+A = cislo ciloveho typu skladu (format Text - "060" musi zustat)
+B = materialove cislo (VELKA PISMENA)
+C = prumerna tydenni potreba
+D = vzdy 0
+Generujeme SpreadsheetML 2003 (.xls): otevre se v Excelu a na rozdil
+od CSV umi vynutit textovy format, takze vedouci nula nezmizi. */
+
+function exportRows(scope) {
+let rows = allRows;
+if (actionFilter) rows = rows.filter((r) => r.action_label === actionFilter);
+if (scope === 'current' && typeFilter) {
+rows = rows.filter((r) => String(r.storage_type || '') === typeFilter);
+}
+return rows;
+}
+
+function xmlEsc(v) {
+return String(v == null ? '' : v)
+.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildExportXls(rows) {
+const body = rows.map((r) => {
+const typ = String(r.storage_type || '').trim();
+const mat = String(r.material || '').trim().toUpperCase();
+const avg = r.avg_weekly == null ? 0 : Number(r.avg_weekly);
+return '<Row>' +
+`<Cell ss:StyleID="sText"><Data ss:Type="String">${xmlEsc(typ)}</Data></Cell>` +
+`<Cell><Data ss:Type="String">${xmlEsc(mat)}</Data></Cell>` +
+`<Cell><Data ss:Type="Number">${avg}</Data></Cell>` +
+'<Cell><Data ss:Type="Number">0</Data></Cell>' +
+'</Row>';
+}).join('');
+return '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n' +
+'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+'<Styles><Style ss:ID="sText"><NumberFormat ss:Format="@"/></Style></Styles>' +
+'<Worksheet ss:Name="Export"><Table>' + body + '</Table></Worksheet></Workbook>';
+}
+
+function runExport(scope) {
+const rows = exportRows(scope);
+if (!rows.length) { setStatus('Export: žádné řádky neodpovídají výběru.', 'empty'); return; }
+const blob = new Blob(['\ufeff' + buildExportXls(rows)], { type: 'application/vnd.ms-excel;charset=utf-8' });
+const stamp = (currentRunAt || '').replace(/[^0-9]/g, '').slice(0, 8);
+const suffix = scope === 'current' && typeFilter ? '_typ' + typeFilter : '_vse';
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = `hladiny_export_${stamp}${suffix}.xls`;
+document.body.appendChild(a); a.click(); document.body.removeChild(a);
+setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+closeModal('exportModal');
+setStatus(`Vyexportováno ${nf0.format(rows.length)} řádků.`, 'ok');
+}
 
 /* ============================ udalosti ============================ */
 
@@ -569,6 +669,51 @@ nextPage.addEventListener('click', () => { page++; renderTable(); });
 drawerClose.addEventListener('click', closeDrawer);
 drawerBackdrop.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !drawer.hidden) closeDrawer(); });
+
+const typeSel = document.getElementById('typeFilter');
+if (typeSel) typeSel.addEventListener('change', () => { typeFilter = typeSel.value; page = 1; renderTable(); });
+
+const pageSel = document.getElementById('pageSize');
+if (pageSel) pageSel.addEventListener('change', () => {
+PAGE_SIZE = pageSel.value === 'all' ? 'all' : Number(pageSel.value);
+page = 1; renderTable();
+});
+
+const helpBtn = document.getElementById('helpBtn');
+if (helpBtn) helpBtn.addEventListener('click', () => {
+document.getElementById('helpBody').innerHTML = helpHtml();
+openModal('helpModal');
+});
+
+const exportBtn = document.getElementById('exportBtn');
+if (exportBtn) exportBtn.addEventListener('click', () => {
+const cur = document.getElementById('expCurrentInfo');
+const all = document.getElementById('expAllInfo');
+const curRadio = document.querySelector('input[name="expScope"][value="current"]');
+if (typeFilter) {
+cur.textContent = `typ ${typeFilter} · ${nf0.format(exportRows('current').length)} řádků`;
+curRadio.disabled = false; curRadio.checked = true;
+} else {
+cur.textContent = 've filtru není vybraný žádný typ skladu';
+curRadio.disabled = true;
+document.querySelector('input[name="expScope"][value="all"]').checked = true;
+}
+all.textContent = `${nf0.format(exportRows('all').length)} řádků`;
+openModal('exportModal');
+});
+
+const exportRunBtn = document.getElementById('exportRun');
+if (exportRunBtn) exportRunBtn.addEventListener('click', () => {
+const sel = document.querySelector('input[name="expScope"]:checked');
+runExport(sel ? sel.value : 'all');
+});
+
+document.querySelectorAll('[data-close]').forEach((el) => {
+el.addEventListener('click', () => closeModal(el.getAttribute('data-close') === 'help' ? 'helpModal' : 'exportModal'));
+});
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape') { closeModal('helpModal'); closeModal('exportModal'); }
+});
 
 init();
 })();
