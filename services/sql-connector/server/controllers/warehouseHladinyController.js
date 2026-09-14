@@ -22,6 +22,7 @@ const { sql, poolPromise } = require('../services/db');
 const SCHEMA = '[FSTASCM].[skladyHladiny]';
 const T_VYPOCET = `${SCHEMA}.[vypocet_hladin]`;
 const T_POTREBY = `${SCHEMA}.[potreby]`;
+const T_VYJIMKY = `${SCHEMA}.[vyjimky]`;
 
 // Spolecny SELECT sloupcu z vypocet_hladin, at je vsude stejne poradi.
 const VYPOCET_COLS = `
@@ -87,7 +88,8 @@ SET @target = (SELECT MAX(run_at) FROM ${T_VYPOCET});
 SELECT v.run_at, v.material, v.current_level, v.q3, v.pct_change, v.new_level,
 v.action_label, v.approved_at, v.approved_by, v.exported_at,
 ah.storage_type,
-p.avg_weekly
+p.avg_weekly,
+CASE WHEN x.material IS NULL THEN 0 ELSE 1 END AS is_vyjimka
 FROM ${T_VYPOCET} AS v
 LEFT JOIN ${SCHEMA}.[aktualni_hladiny] AS ah ON ah.material = v.material
 LEFT JOIN (
@@ -95,6 +97,7 @@ SELECT material, AVG(CAST(requirement_qty AS DECIMAL(18,3))) AS avg_weekly
 FROM ${T_POTREBY}
 GROUP BY material
 ) AS p ON p.material = v.material
+LEFT JOIN ${T_VYJIMKY} AS x ON x.material = v.material
 WHERE v.run_at = @target
 ORDER BY v.action_label, v.material;`);
 
@@ -204,9 +207,55 @@ next(err);
 }
 }
 
+
+/* ===========================================================================
+GET /api/v1/warehouse-hladiny/vyjimky - seznam vyjimek
+=========================================================================== */
+async function getVyjimky(req, res, next) {
+try {
+const pool = await poolPromise;
+const result = await pool.request().query(
+`SELECT material, poznamka, created_at, created_by FROM ${T_VYJIMKY} ORDER BY material;`);
+res.status(200).json({ count: result.recordset.length, data: result.recordset });
+} catch (err) { next(err); }
+}
+
+/* ===========================================================================
+POST /api/v1/warehouse-hladiny/vyjimky { material, zapnuto, poznamka, uzivatel }
+Prepina vyjimku pro jeden material. Zapis je idempotentni.
+=========================================================================== */
+async function setVyjimka(req, res, next) {
+const material = String((req.body && req.body.material) || '').trim();
+const zapnuto = !!(req.body && req.body.zapnuto);
+const poznamka = (req.body && req.body.poznamka) || null;
+const uzivatel = (req.body && req.body.uzivatel) || null;
+
+if (!material) return res.status(400).json({ error: 'Chybi material.' });
+
+try {
+const pool = await poolPromise;
+const rq = pool.request()
+.input('material', sql.VarChar(40), material)
+.input('poznamka', sql.NVarChar(200), poznamka)
+.input('uzivatel', sql.NVarChar(128), uzivatel);
+
+if (zapnuto) {
+await rq.query(`
+IF NOT EXISTS (SELECT 1 FROM ${T_VYJIMKY} WHERE material = @material)
+INSERT INTO ${T_VYJIMKY} (material, poznamka, created_by)
+VALUES (@material, @poznamka, @uzivatel);`);
+} else {
+await rq.query(`DELETE FROM ${T_VYJIMKY} WHERE material = @material;`);
+}
+res.status(200).json({ material, zapnuto });
+} catch (err) { next(err); }
+}
+
 module.exports = {
 getRuns,
 getVypocet,
+getVyjimky,
+setVyjimka,
 getSummary,
 getMaterialDetail,
 };

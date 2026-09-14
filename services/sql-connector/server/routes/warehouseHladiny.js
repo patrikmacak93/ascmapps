@@ -12,6 +12,8 @@ getRuns,
 getVypocet,
 getSummary,
 getMaterialDetail,
+getVyjimky,
+setVyjimka,
 } = require('../controllers/warehouseHladinyController');
 
 // GET /api/v1/warehouse-hladiny/runs -> seznam behu vypoctu
@@ -25,5 +27,11 @@ router.get('/warehouse-hladiny/summary', getSummary);
 
 // GET /api/v1/warehouse-hladiny/material?material=...&run_at=... -> detail + potreby
 router.get('/warehouse-hladiny/material', getMaterialDetail);
+
+// GET /api/v1/warehouse-hladiny/vyjimky -> seznam vyjimek
+router.get('/warehouse-hladiny/vyjimky', getVyjimky);
+
+// POST /api/v1/warehouse-hladiny/vyjimky -> zapnout/vypnout vyjimku
+router.post('/warehouse-hladiny/vyjimky', setVyjimka);
 
 module.exports = router;

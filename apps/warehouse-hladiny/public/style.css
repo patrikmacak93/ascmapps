@@ -456,3 +456,11 @@ border-radius: 12px; padding: 13px 15px; margin-bottom: 10px;
 
 /* legenda: plná čára pro Q3 */
 .lg-line-solid { border-top: 2px solid var(--brand-dark); }
+
+/* sloupec Výjimka */
+.col-exc { text-align: center; width: 74px; }
+thead th.col-exc { font-size: 11px; }
+.exc-box { width: 16px; height: 16px; cursor: pointer; accent-color: var(--brand); }
+.exc-box:disabled { opacity: .45; cursor: wait; }
+tbody tr:has(.exc-box:checked) { background: #fbf6ec; }
+tbody tr:has(.exc-box:checked) .mat-cell { font-style: italic; }

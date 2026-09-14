@@ -262,11 +262,18 @@ return `<tr data-material="${escapeHtml(r.material)}">
 <td class="num">${r.new_level == null ? '<span class="muted">—</span>' : fmt(r.new_level)}</td>
 <td class="num ${pctCls}">${fmtPct(r.pct_change)}</td>
 <td><span class="badge badge-${kind}">${escapeHtml(r.action_label)}</span></td>
+<td class="col-exc"><input type="checkbox" class="exc-box" data-material="${escapeHtml(r.material)}"${r.is_vyjimka ? ' checked' : ''} title="Vyloučit z automatické kalkulace"></td>
 </tr>`;
 }).join('');
 
 whBody.querySelectorAll('tr[data-material]').forEach((tr) => {
-tr.addEventListener('click', () => openDetail(tr.getAttribute('data-material')));
+tr.addEventListener('click', (e) => {
+if (e.target.closest('.col-exc')) return; // klik na checkbox neotvira detail
+openDetail(tr.getAttribute('data-material'));
+});
+});
+whBody.querySelectorAll('.exc-box').forEach((box) => {
+box.addEventListener('change', () => ulozVyjimku(box.getAttribute('data-material'), box.checked, box));
 });
 }
 
@@ -545,6 +552,36 @@ hit.addEventListener('mouseleave', () => { tip.hidden = true; });
 function closeDrawer() { drawer.hidden = true; drawerBody.innerHTML = ''; }
 
 
+/* ==================== VYJIMKY z automatickeho vypoctu ====================
+Zaskrtnuty material se nepocita automaticky - hladina mu zustava na
+aktualni hodnote a takto se i exportuje. Zapis jde do tabulky
+skladyHladiny.vyjimky; projevi se az pri pristim behu vypoctu. */
+
+async function ulozVyjimku(material, zapnuto, box) {
+if (box) box.disabled = true;
+try {
+const res = await fetch(`${API_BASE}/vyjimky`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ material, zapnuto }),
+});
+const body = await res.json().catch(() => ({}));
+if (!res.ok) throw new Error(body.error || `Server odpověděl chybou ${res.status}.`);
+
+// udrzime lokalni stav, at filtr i export pracuji s aktualnimi daty
+const row = allRows.find((r) => r.material === material);
+if (row) row.is_vyjimka = zapnuto ? 1 : 0;
+setStatus(zapnuto
+? `${material}: vyloučeno z automatické kalkulace (projeví se příštím výpočtem).`
+: `${material}: výjimka zrušena.`, 'ok');
+} catch (err) {
+if (box) box.checked = !zapnuto; // vratime checkbox zpet
+setStatus(`Výjimku se nepodařilo uložit: ${err.message}`, 'error');
+} finally {
+if (box) box.disabled = false;
+}
+}
+
 /* ==================== typ skladu ==================== */
 
 function populateTypeFilter() {
@@ -615,7 +652,11 @@ function buildExportXls(rows) {
 const body = rows.map((r) => {
 const typ = String(r.storage_type || '').trim();
 const mat = String(r.material || '').trim().toUpperCase();
-const avg = r.avg_weekly == null ? 0 : Math.ceil(Number(r.avg_weekly));
+// Vyjimka = materiál se nepočítá automaticky, exportuje se
+// s aktuální hladinou; ostatní s průměrnou týdenní potřebou.
+const avg = r.is_vyjimka
+? Math.ceil(Number(r.current_level) || 0)
+: (r.avg_weekly == null ? 0 : Math.ceil(Number(r.avg_weekly)));
 return '<Row>' +
 `<Cell ss:StyleID="sText"><Data ss:Type="String">${xmlEsc(typ)}</Data></Cell>` +
 `<Cell><Data ss:Type="String">${xmlEsc(mat)}</Data></Cell>` +
