@@ -96,6 +96,9 @@ const sign = p > 0 ? '+' : '';
 return `${sign}${p.toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %`;
 }
 
+// DATETIME2 ze SQL nenese casovou zonu - ovladac ho ale preda jako UTC
+// a prohlizec by k nemu pripocetl posun (v lete +2 h). Jsou to prosté
+// "nastenne" casy serveru, takze je formatujeme BEZ prevodu.
 function fmtDateTime(iso) {
 if (!iso) return '—';
 const d = new Date(iso);
@@ -103,6 +106,7 @@ if (Number.isNaN(d.getTime())) return String(iso);
 return d.toLocaleString('cs-CZ', {
 day: '2-digit', month: '2-digit', year: 'numeric',
 hour: '2-digit', minute: '2-digit',
+timeZone: 'UTC',
 });
 }
 

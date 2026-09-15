@@ -367,7 +367,12 @@ await pool.request()
 .query(`
 DELETE FROM ${T_META} WHERE run_at = @run;
 INSERT INTO ${T_META} (run_at, zdroj, loaded_at, pocet_radku)
-SELECT @run, zdroj, loaded_at, pocet FROM (${SQL_ZDROJE}) AS z;`);
+SELECT @run, zdroj, loaded_at, pocet FROM (${SQL_ZDROJE}) AS z;
+
+-- Procedura vypocet_hladin tabulku pokazde prepise, takze existuje
+-- vzdy jen jeden beh. Metadata po starsich bezich uklidime.
+DELETE FROM ${T_META}
+WHERE run_at NOT IN (SELECT DISTINCT run_at FROM ${T_VYPOCET});`);
 }
 
 const zdroje = await pool.request().query(`
