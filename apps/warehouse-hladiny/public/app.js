@@ -176,7 +176,7 @@ tableSection.hidden = false;
 const zmeny = allRows.filter(
 (r) => r.new_level != null && (r.current_level == null || Number(r.new_level) !== Number(r.current_level))
 ).length;
-setStatus(`Běh ${fmtDateTime(currentRunAt)} — ${allRows.length} materiálů, z toho ${zmeny} navržených změn.`, 'ok');
+setStatus(''); // datum i pocty jsou v hlavicce, stav patri akcim
 if (runWhen) runWhen.textContent = fmtDateTime(currentRunAt);
 if (runMeta) runMeta.textContent = `${nf0.format(allRows.length)} materiálů · ${nf0.format(zmeny)} změn`;
 nactiZdroje();
