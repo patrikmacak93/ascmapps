@@ -304,7 +304,7 @@ return `<tr data-material="${escapeHtml(r.material)}">
 <td class="num">${fmt(r.current_level)}</td>
 <td class="num">${r.new_level == null ? '<span class="muted">—</span>' : fmt(r.new_level)}</td>
 <td class="num ${pctCls}">${fmtPct(r.pct_change)}</td>
-<td><span class="badge badge-${kind}">${escapeHtml(r.action_label)}</span></td>
+<td><span class="badge badge-${kind}">${escapeHtml(cellText(r, 'action_label'))}</span></td>
 <td class="muted">${escapeHtml(r.storage_type || '—')}</td>
 <td class="col-exc"><input type="checkbox" class="exc-box" data-material="${escapeHtml(r.material)}"${r.is_vyjimka ? ' checked' : ''} title="Vyloučit z automatické kalkulace"></td>
 </tr>`;
@@ -683,6 +683,12 @@ const FILTER_COLS = ['material', 'current_level', 'new_level', 'pct_change',
 
 // Text bunky pro dany sloupec - musi sedet s tim, co vykresluje renderTable.
 function cellText(r, key) {
+// Duvod se zobrazuje i filtruje jako SLOUCENA kategorie. Puvodni
+// action_label z DB zustava v detailu materialu.
+if (key === 'action_label') {
+const k = KAT_BY_ID[kategorie(r.action_label, r.is_vyjimka)];
+return k ? k.nazev : String(r.action_label || '');
+}
 if (key === 'pct_change') return fmtPct(r.pct_change);
 if (key === 'is_vyjimka') return r.is_vyjimka ? 'Ano' : 'Ne';
 if (key === 'storage_type') return String(r.storage_type || '—');
@@ -756,11 +762,6 @@ if (!vybrane.length) { setStatus('Filtr: nevybrána žádná hodnota.', 'empty')
 if (!hledani && vybrane.length === items.length) delete colFilters[xlKey]; // vse = bez filtru
 else colFilters[xlKey] = new Set(vybrane);
 
-if (xlKey === 'action_label') {
-const f = colFilters.action_label;
-actionFilter = (f && f.size === 1) ? Array.from(f)[0] : null;
-renderSummary();
-}
 page = 1;
 closeXlFilter();
 renderTable();
