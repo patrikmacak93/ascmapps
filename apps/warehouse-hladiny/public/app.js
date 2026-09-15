@@ -57,7 +57,8 @@ let allRows = [];
 let sortKey = 'action_label';
 let sortDir = 1; // 1 = asc, -1 = desc
 
-let actionFilter = null; // drzi se kvuli propojeni s kartami souhrnu
+let actionFilter = null; // filtr sloupce Duvod (excelovsky)
+let katFilter = null; // filtr podle slouceneho duvodu (karty souhrnu)
 let colFilters = {}; // { key: Set(zobrazenych hodnot) } - prazdne = bez filtru
 let xlKey = null; // sloupec, jehoz filtr je prave otevreny
 let lastSummary = [];
@@ -107,17 +108,12 @@ hour: '2-digit', minute: '2-digit',
 }
 
 // Zatrideni slovniho duvodu do barevne kategorie.
-function actionKind(label) {
-const s = (label || '').toLowerCase();
-if (s.includes('navýš')) return 'up';
-if (s.includes('poníž') || s.includes('poniz')) return 'down';
-if (s.includes('mrtv')) return 'dead';
-if (s.includes('nov')) return 'new';
-return 'flat';
+function actionKind(label, jeVyjimka) {
+return kategorie(label, jeVyjimka);
 }
 const KIND_COLOR = {
 up: 'var(--up)', down: 'var(--down)', flat: 'var(--flat)',
-dead: 'var(--dead)', new: 'var(--new)',
+dead: 'var(--dead)', new: 'var(--new)', exc: 'var(--brand-lime)',
 };
 
 function setStatus(text, typ) {
@@ -158,7 +154,7 @@ setStatus('Načítám výpočet…', 'loading');
 summarySection.hidden = true;
 tableSection.hidden = true;
 try {
-const [summary, vypocet] = await Promise.all([
+const [, vypocet] = await Promise.all([
 apiGet(`/summary?run_at=${encodeURIComponent(runAt)}`),
 apiGet(`/vypocet?run_at=${encodeURIComponent(runAt)}`),
 ]);
@@ -166,7 +162,7 @@ apiGet(`/vypocet?run_at=${encodeURIComponent(runAt)}`),
 currentRunAt = vypocet.run_at || runAt;
 allRows = vypocet.data || [];
 
-renderSummary(summary);
+renderSummary();
 populateTypeFilter();
 
 // reset filtru/strankovani pri zmene behu
@@ -188,44 +184,82 @@ setStatus(`Chyba: ${err.message}`, 'error');
 }
 }
 
+
+/* ==================== SLOUCENE KATEGORIE ====================
+Procedura pise 8 ruznych action_label. Pro prehled je slucujeme do peti
+skupin - uzivatele zajima smer zmeny, ne jemne rozliseni duvodu.
+Puvodni label zustava v radku a je videt v detailu. */
+
+const KATEGORIE = [
+{ id: 'up', nazev: 'Navýšeno', barva: 'var(--up)',
+popis: 'Nová hladina je o víc než 20 % vyšší než současná.' },
+{ id: 'down', nazev: 'Poníženo', barva: 'var(--down)',
+popis: 'Nová hladina je o víc než 20 % nižší než současná.' },
+{ id: 'dead', nazev: 'Mrtvé materiály', barva: 'var(--dead)',
+popis: 'Za celých 18 týdnů není žádná potřeba — hladina se sráží na 0.' },
+{ id: 'flat', nazev: 'Beze změny', barva: 'var(--flat)',
+popis: 'Rozdíl je uvnitř pásma ±20 %, hladina se nemění.' },
+{ id: 'new', nazev: 'Nové materiály', barva: 'var(--new)',
+popis: 'Materiál zatím žádnou hladinu nemá, nasazuje se spočtená hodnota.' },
+{ id: 'exc', nazev: 'Výjimky', barva: 'var(--brand-lime)',
+popis: 'Ručně vyloučeno z automatické kalkulace — hladina zůstává na současné hodnotě.' },
+];
+
+// action_label -> id kategorie. Poradi testu je zamerne:
+// vyjimka ma prednost, mrtvy material patri k ponizeni (sraz na 0).
+function kategorie(label, jeVyjimka) {
+if (jeVyjimka) return 'exc';
+const s = (label || '').toLowerCase();
+if (s.includes('výjimk') || s.includes('vyjimk')) return 'exc';
+if (s.includes('nov')) return 'new';
+if (s.includes('navýš') || s.includes('navys')) return 'up';
+if (s.includes('mrtv')) return 'dead';
+if (s.includes('poníž') || s.includes('poniz')) return 'down';
+return 'flat';
+}
+
+const KAT_BY_ID = Object.fromEntries(KATEGORIE.map((k) => [k.id, k]));
+
 /* ============================ souhrn ============================ */
 
-function renderSummary(summary) {
-lastSummary = summary || [];
-const total = lastSummary.reduce((a, x) => a + Number(x.pocet || 0), 0);
+function renderSummary() {
+const pocty = {};
+KATEGORIE.forEach((k) => { pocty[k.id] = 0; });
+allRows.forEach((r) => { pocty[kategorie(r.action_label, r.is_vyjimka)] += 1; });
+
+const total = allRows.length;
 sumTotal.textContent = `${nf0.format(total)} materiálů`;
 
-const max = Math.max(1, ...lastSummary.map((x) => Number(x.pocet || 0)));
-// seradime od nejcetnejsiho, at je hned videt, co dominuje
-const rows = lastSummary.slice().sort((a, b) => Number(b.pocet || 0) - Number(a.pocet || 0));
+const max = Math.max(1, ...Object.values(pocty));
 
-sumGrid.innerHTML = rows.map((x) => {
-const kind = actionKind(x.action_label);
-const pocet = Number(x.pocet || 0);
+sumGrid.innerHTML = KATEGORIE.map((k) => {
+const pocet = pocty[k.id];
 const pct = total ? (pocet / total) * 100 : 0;
-const active = actionFilter === x.action_label ? ' active' : '';
-return `<button type="button" class="sum-card${active}" data-label="${escapeHtml(x.action_label)}" style="--c:${KIND_COLOR[kind]}">
+const active = katFilter === k.id ? ' active' : '';
+return `<button type="button" class="sum-card${active}" data-kat="${k.id}" style="--c:${k.barva}" title="${escapeHtml(k.popis)}">
 <span class="sum-card-top">
 <span class="sum-card-n">${nf0.format(pocet)}</span>
 <span class="sum-card-pct">${pct.toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %</span>
 </span>
-<span class="sum-card-label">${escapeHtml(x.action_label)}</span>
+<span class="sum-card-label">${escapeHtml(k.nazev)}</span>
+<span class="sum-card-desc">${escapeHtml(k.popis)}</span>
 <span class="sum-card-track"><span class="sum-card-fill" style="width:${(pocet / max) * 100}%"></span></span>
 </button>`;
 }).join('');
 
 sumGrid.querySelectorAll('.sum-card').forEach((btn) => {
 btn.addEventListener('click', () => {
-const label = btn.getAttribute('data-label');
-actionFilter = actionFilter === label ? null : label;
+const id = btn.getAttribute('data-kat');
+katFilter = katFilter === id ? null : id;
 page = 1;
-if (actionFilter) colFilters.action_label = new Set([actionFilter]);
-else delete colFilters.action_label;
-renderSummary(lastSummary);
+renderSummary();
 renderTable();
 });
 });
 }
+
+// zpetna kompatibilita - starsi volani predavala data z /summary
+function prepocitejSummary() { renderSummary(); }
 
 /* ============================ tabulka ============================ */
 
@@ -234,6 +268,7 @@ let rows = allRows.filter((r) => FILTER_COLS.every((k) => {
 const sel = colFilters[k];
 return !sel || sel.has(cellText(r, k));
 }));
+if (katFilter) rows = rows.filter((r) => kategorie(r.action_label, r.is_vyjimka) === katFilter);
 
 const numeric = new Set(['current_level', 'new_level', 'pct_change']);
 rows = rows.slice().sort((a, b) => {
@@ -260,7 +295,7 @@ if (!rows.length) {
 whBody.innerHTML = `<tr><td colspan="7" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
 } else {
 whBody.innerHTML = pageRows.map((r) => {
-const kind = actionKind(r.action_label);
+const kind = actionKind(r.action_label, r.is_vyjimka);
 const pctCls = r.pct_change > 0 ? 'pct-up' : r.pct_change < 0 ? 'pct-down' : 'muted';
 return `<tr data-material="${escapeHtml(r.material)}">
 <td class="mat-cell">${escapeHtml(r.material)}</td>
@@ -298,7 +333,7 @@ activeFilterEl.querySelector('button').addEventListener('click', () => {
 actionFilter = null;
 delete colFilters.action_label;
 page = 1;
-if (lastSummary.length) renderSummary(lastSummary);
+renderSummary();
 renderTable();
 });
 } else {
@@ -497,7 +532,7 @@ const data = await apiGet(`/material?material=${encodeURIComponent(material)}&ru
 const vp = data.vypocet;
 const potreby = data.potreby || [];
 
-const kind = vp ? actionKind(vp.action_label) : 'flat';
+const kind = vp ? actionKind(vp.action_label, vp.is_vyjimka) : 'flat';
 
 const nums = `
 <div class="detail-nums">
@@ -577,6 +612,48 @@ hit.addEventListener('mouseleave', () => { tip.hidden = true; });
 
 function closeDrawer() { drawer.hidden = true; drawerBody.innerHTML = ''; }
 
+
+// Label musi PRESNE odpovidat tomu, co zapisuje usp_vypocet_hladin,
+// jinak by se radek po prepoctu presunul do jine kategorie.
+const LABEL_VYJIMKA = 'Výjimka – beze změny';
+
+/* Okamzite prepnuti radku do kategorie "Vyjimka - beze zmeny" (a zpet).
+Uzivatel tak vidi dopad hned, nez probehne prepocet v DB.
+Puvodni hodnoty si drzime v r._pred, aby slo odskrtnuti vratit. */
+function prepniKategorii(r, zapnuto) {
+if (zapnuto) {
+if (!r._pred) {
+r._pred = {
+action_label: r.action_label,
+new_level: r.new_level,
+pct_change: r.pct_change,
+};
+}
+r.action_label = LABEL_VYJIMKA;
+r.new_level = r.current_level;
+r.pct_change = 0;
+} else if (r._pred) {
+r.action_label = r._pred.action_label;
+r.new_level = r._pred.new_level;
+r.pct_change = r._pred.pct_change;
+delete r._pred;
+}
+// Radek, ktery uz z DB prisel jako vyjimka, puvodni hodnoty nema -
+// ty se dopocitaji az pristim prepoctem, proto ho nechavame beze zmeny.
+r.is_vyjimka = zapnuto ? 1 : 0;
+}
+
+// Souhrn dopocitany z aktualnich radku - drzi karty v souladu s tabulkou
+// i mezi prepocty.
+function prepocitejSummary() {
+const mapa = new Map();
+allRows.forEach((r) => {
+const l = r.action_label || '—';
+mapa.set(l, (mapa.get(l) || 0) + 1);
+});
+renderSummary(Array.from(mapa, ([action_label, pocet]) => ({ action_label, pocet })));
+}
+
 /* ==================== VYJIMKY z automatickeho vypoctu ====================
 Zaskrtnuty material se nepocita automaticky - hladina mu zustava na
 aktualni hodnote a takto se i exportuje. Zapis jde do tabulky
@@ -593,9 +670,11 @@ body: JSON.stringify({ material, zapnuto }),
 const body = await res.json().catch(() => ({}));
 if (!res.ok) throw new Error(body.error || `Server odpověděl chybou ${res.status}.`);
 
-// udrzime lokalni stav, at filtr i export pracuji s aktualnimi daty
+// lokalni stav + okamzite prepnuti kategorie
 const row = allRows.find((r) => r.material === material);
-if (row) row.is_vyjimka = zapnuto ? 1 : 0;
+if (row) prepniKategorii(row, zapnuto);
+prepocitejSummary();
+renderTable();
 setStatus(zapnuto
 ? `${material}: vyloučeno z automatické kalkulace (projeví se příštím výpočtem).`
 : `${material}: výjimka zrušena.`, 'ok');
@@ -684,7 +763,7 @@ else colFilters[xlKey] = new Set(vybrane);
 if (xlKey === 'action_label') {
 const f = colFilters.action_label;
 actionFilter = (f && f.size === 1) ? Array.from(f)[0] : null;
-if (lastSummary.length) renderSummary(lastSummary);
+renderSummary();
 }
 page = 1;
 closeXlFilter();
@@ -759,7 +838,8 @@ const body = await res.json().catch(() => ({}));
 if (!res.ok) throw new Error(body.error || `Server odpověděl chybou ${res.status}.`);
 
 const set = new Set(cile);
-allRows.forEach((r) => { if (set.has(r.material)) r.is_vyjimka = zapnuto ? 1 : 0; });
+allRows.forEach((r) => { if (set.has(r.material)) prepniKategorii(r, zapnuto); });
+prepocitejSummary();
 renderTable();
 setStatus(`${zapnuto ? 'Nastaveno' : 'Zrušeno'} ${nf0.format(cile.length)} výjimek (projeví se příštím výpočtem).`, 'ok');
 } catch (err) {
@@ -806,42 +886,54 @@ if (hodin < 48) return 'zdroj-vcerejsi';
 return 'zdroj-stary';
 }
 
-function renderZdroje(zdroje) {
+function renderZdroje(payload) {
 const box = document.getElementById('zdrojeBox');
 const list = document.getElementById('zdrojeList');
 if (!box || !list) return;
 
-if (!zdroje || !zdroje.length) { box.hidden = true; return; }
+const beh = (payload && payload.beh) || [];
+const ted = (payload && payload.aktualni) || [];
+if (!beh.length && !ted.length) { box.hidden = true; return; }
 
-list.innerHTML = zdroje.map((z) => {
+const tedMap = Object.fromEntries(ted.map((z) => [z.zdroj, z]));
+const radky = (beh.length ? beh : ted);
+
+list.innerHTML = radky.map((z) => {
 const nazev = ZDROJ_POPIS[z.zdroj] || z.zdroj;
-const cls = stariTrida(z.loaded_at);
 const kdy = z.loaded_at ? fmtDateTime(z.loaded_at) : 'neimportováno';
-return `<div class="zdroj ${cls}">
+const akt = tedMap[z.zdroj];
+// zdroj se od vypoctu zmenil = appka ukazuje starsi vysledek
+const zmeneno = beh.length && akt && akt.loaded_at && z.loaded_at
+&& new Date(akt.loaded_at).getTime() !== new Date(z.loaded_at).getTime();
+return `<div class="zdroj ${z.loaded_at ? '' : 'zdroj-chybi'}${zmeneno ? ' zdroj-zmeneno' : ''}">
 <span class="zdroj-dot"></span>
 <span class="zdroj-nazev">${escapeHtml(nazev)}</span>
 <span class="zdroj-kdy">${escapeHtml(kdy)}</span>
-<span class="zdroj-pocet">${nf0.format(Number(z.pocet || 0))} řádků</span>
+<span class="zdroj-pocet">${nf0.format(Number(z.pocet_radku != null ? z.pocet_radku : z.pocet || 0))} řádků</span>
+${zmeneno ? `<span class="zdroj-novy">nový import ${escapeHtml(fmtDateTime(akt.loaded_at))}</span>` : ''}
 </div>`;
 }).join('');
 
-// Upozorneni, kdyz zdroje nejsou ze stejneho dne - vypocet by michal
-// cerstve potreby se starymi hladinami.
-const dny = new Set(zdroje.filter((z) => z.loaded_at)
-.map((z) => new Date(z.loaded_at).toDateString()));
-const chybi = zdroje.some((z) => !z.loaded_at);
-let varovani = '';
-if (chybi) varovani = 'Některý ze zdrojů zatím nebyl naimportován.';
-else if (dny.size > 1) varovani = 'Zdroje nejsou ze stejného dne — výpočet by kombinoval různě stará data.';
-list.insertAdjacentHTML('beforeend', varovani
-? `<p class="zdroje-warn">${escapeHtml(varovani)}</p>` : '');
+const zmenenych = radky.filter((z) => {
+const akt = tedMap[z.zdroj];
+return beh.length && akt && akt.loaded_at && z.loaded_at
+&& new Date(akt.loaded_at).getTime() !== new Date(z.loaded_at).getTime();
+}).length;
 
+if (zmenenych) {
+list.insertAdjacentHTML('beforeend',
+`<p class="zdroje-warn">Od tohoto výpočtu dorazil nový import (${zmenenych} ze ${radky.length} zdrojů).
+Aplikace stále ukazuje výsledek původního výpočtu — pro zohlednění nových dat spusť <b>Provést výpočet</b>.</p>`);
+}
 box.hidden = false;
 }
 
 async function nactiZdroje() {
 try {
-renderZdroje(await apiGet('/zdroje'));
+const z = await apiGet('/zdroje');
+renderZdroje(z);
+const t = document.getElementById('zdrojeRun');
+if (t) t.textContent = z && z.run_at ? `Výpočet z ${fmtDateTime(z.run_at)}` : '';
 } catch (err) {
 // stari dat je jen doplnkova informace - chyba nesmi shodit stranku
 console.warn('Stáří zdrojových dat se nepodařilo načíst:', err.message);
@@ -864,7 +956,7 @@ const res = await fetch(`${API_BASE}/prepocet`, { method: 'POST' });
 const body = await res.json().catch(() => ({}));
 if (!res.ok) throw new Error(body.error || `Server odpověděl chybou ${res.status}.`);
 
-renderZdroje(body.zdroje);
+await nactiZdroje();
 setStatus(`Přepočet hotov: ${nf0.format(Number(body.pocet_celkem || 0))} materiálů (${fmtDateTime(body.run_at)}). Načítám výsledek…`, 'ok');
 
 // znovu nacist seznam behu, at se vybere ten novy
@@ -1030,7 +1122,7 @@ const xlClear = document.getElementById('xlClear');
 if (xlClear) xlClear.addEventListener('click', () => {
 if (xlKey) {
 delete colFilters[xlKey];
-if (xlKey === 'action_label') { actionFilter = null; if (lastSummary.length) renderSummary(lastSummary); }
+if (xlKey === 'action_label') { actionFilter = null; renderSummary(); }
 }
 page = 1; closeXlFilter(); renderTable();
 });

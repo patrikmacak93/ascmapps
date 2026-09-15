@@ -26,6 +26,7 @@ const T_VYJIMKY = `${SCHEMA}.[vyjimky]`;
 const T_POTREBY_SRC = `${SCHEMA}.[potreby]`;
 const T_AKT = `${SCHEMA}.[aktualni_hladiny]`;
 const T_NOVE = `${SCHEMA}.[nove_hladiny]`;
+const T_META = `${SCHEMA}.[vypocet_meta]`;
 
 // Spolecny SELECT sloupcu z vypocet_hladin, at je vsude stejne poradi.
 const VYPOCET_COLS = `
@@ -309,16 +310,31 @@ GET /api/v1/warehouse-hladiny/zdroje
 Kdy naposledy dorazila data do kazdeho ze tri zdrojovych reportu.
 Frontend podle toho ukazuje, ze ceho je vypocet postaveny.
 =========================================================================== */
-async function getZdroje(req, res, next) {
-try {
-const pool = await poolPromise;
-const result = await pool.request().query(`
+const SQL_ZDROJE = `
 SELECT 'potreby' AS zdroj, MAX(loaded_at) AS loaded_at, COUNT(*) AS pocet FROM ${T_POTREBY_SRC}
 UNION ALL
 SELECT 'aktualni_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_AKT}
 UNION ALL
-SELECT 'nove_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_NOVE};`);
-res.status(200).json({ data: result.recordset });
+SELECT 'nove_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_NOVE}`;
+
+async function getZdroje(req, res, next) {
+try {
+const pool = await poolPromise;
+
+// snapshot ulozeny u posledniho behu = z ceho vypocet REALNE vznikl
+const beh = await pool.request().query(`
+DECLARE @run DATETIME2(0) = (SELECT MAX(run_at) FROM ${T_VYPOCET});
+SELECT @run AS run_at, zdroj, loaded_at, pocet_radku
+FROM ${T_META} WHERE run_at = @run ORDER BY zdroj;`);
+
+// aktualni stav tabulek = co lezi v DB ted
+const ted = await pool.request().query(SQL_ZDROJE + ';');
+
+res.status(200).json({
+run_at: beh.recordset.length ? beh.recordset[0].run_at : null,
+beh: beh.recordset,
+aktualni: ted.recordset,
+});
 } catch (err) { next(err); }
 }
 
@@ -341,15 +357,25 @@ SELECT MAX(run_at) AS run_at, COUNT(*) AS pocet_celkem
 FROM ${T_VYPOCET}
 WHERE run_at = (SELECT MAX(run_at) FROM ${T_VYPOCET});`);
 
+const runAt = po.recordset[0] ? po.recordset[0].run_at : null;
+
+// Ulozime snapshot stari zdroju k tomuto behu. Diky tomu appka pozna,
+// ze se zdroje od vypoctu zmenily, misto aby michala ruzne stara data.
+if (runAt) {
+await pool.request()
+.input('run', sql.DateTime2, runAt)
+.query(`
+DELETE FROM ${T_META} WHERE run_at = @run;
+INSERT INTO ${T_META} (run_at, zdroj, loaded_at, pocet_radku)
+SELECT @run, zdroj, loaded_at, pocet FROM (${SQL_ZDROJE}) AS z;`);
+}
+
 const zdroje = await pool.request().query(`
-SELECT 'potreby' AS zdroj, MAX(loaded_at) AS loaded_at, COUNT(*) AS pocet FROM ${T_POTREBY_SRC}
-UNION ALL
-SELECT 'aktualni_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_AKT}
-UNION ALL
-SELECT 'nove_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_NOVE};`);
+SELECT zdroj, loaded_at, pocet_radku AS pocet FROM ${T_META}
+WHERE run_at = (SELECT MAX(run_at) FROM ${T_VYPOCET}) ORDER BY zdroj;`);
 
 res.status(200).json({
-run_at: po.recordset[0] ? po.recordset[0].run_at : null,
+run_at: runAt,
 pocet_celkem: po.recordset[0] ? po.recordset[0].pocet_celkem : 0,
 zdroje: zdroje.recordset,
 });

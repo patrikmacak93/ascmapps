@@ -26,7 +26,7 @@ Warehouse hladiny - styl ladeny na Schaeffler portal (homepage.css)
 
 --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 --mono: "Consolas", "SF Mono", ui-monospace, monospace;
---maxw: 1120px;
+--maxw: min(1760px, 96vw);
 }
 
 * { box-sizing: border-box; }
@@ -605,3 +605,27 @@ grid-column: 1 / -1; margin: 6px 0 0; font-size: 12.5px;
 color: #9a6d0a; background: #fdf6e6; border: 1px solid #f0dfb4;
 border-radius: 8px; padding: 7px 10px;
 }
+
+/* ===== Karty kategorií: popis + legenda ===== */
+.sum-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.sum-card-desc {
+font-size: 11.5px; line-height: 1.35; color: var(--ink-soft);
+display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+overflow: hidden; min-height: 2.7em;
+}
+.sum-card.active .sum-card-desc { color: var(--brand-darker); }
+
+/* datum běhu v hlavičce panelu zdrojů */
+.zdroje-run { font-size: 12.5px; font-weight: 700; color: var(--brand-dark); margin-left: 10px; }
+
+/* zdroj, který se od výpočtu změnil */
+.zdroj-zmeneno .zdroj-dot { background: #d89b1c; }
+.zdroj-zmeneno .zdroj-kdy { color: #9a6d0a; }
+.zdroj-novy {
+font-size: 11.5px; color: #9a6d0a; background: #fdf6e6;
+border: 1px solid #f0dfb4; border-radius: 6px; padding: 1px 7px;
+}
+.zdroj:not(.zdroj-chybi):not(.zdroj-zmeneno) .zdroj-dot { background: var(--brand); }
+
+/* badge pro výjimky - odlišit od mrtvých materiálů */
+.badge-exc { background: var(--brand-lime); color: #1d2b12; }
