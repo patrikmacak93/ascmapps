@@ -150,7 +150,9 @@ router.get('/zdroje', async (req, res) => {
 try {
 const vysledek = await volatConnector('/warehouse-hladiny/zdroje');
 res.set('Cache-Control', 'no-store');
-res.json(vysledek.data || []);
+// Connector vraci { run_at, beh, aktualni } - posilame cely objekt,
+// frontend z nej potrebuje vsechny tri casti.
+res.json(vysledek);
 } catch (err) {
 chyba(res, 'GET /zdroje', err, 'Chyba pri nacitani stari zdrojovych dat.');
 }

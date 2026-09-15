@@ -901,8 +901,11 @@ const box = document.getElementById('zdrojeBox');
 const list = document.getElementById('zdrojeList');
 if (!box || !list) return;
 
+// Snesu i starsi tvar odpovedi (prosté pole) - at panel nezmizi,
+// kdyz nekde bezi jeste nenasazena verze connectoru.
 const beh = (payload && payload.beh) || [];
-const ted = (payload && payload.aktualni) || [];
+const ted = (payload && payload.aktualni)
+|| (Array.isArray(payload) ? payload : []);
 if (!beh.length && !ted.length) { box.hidden = true; return; }
 
 const tedMap = Object.fromEntries(ted.map((z) => [z.zdroj, z]));
