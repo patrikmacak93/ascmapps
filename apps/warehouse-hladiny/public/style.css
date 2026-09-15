@@ -150,7 +150,6 @@ margin-bottom: 14px;
 .dist-head > span:first-child {
 font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
 }
-.dist-hint { font-size: 12px; color: var(--ink-soft); }
 .dist-bars { display: flex; flex-direction: column; gap: 10px; }
 .dist-row {
 display: grid; grid-template-columns: 190px 1fr 46px; align-items: center;
@@ -367,9 +366,6 @@ background: var(--surface); color: var(--ink-soft);
 .help-btn span { font-weight: 700; color: var(--brand); }
 
 /* sloučený souhrn */
-.sum-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
-.sum-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-.sum-total { font-size: 13px; font-weight: 700; color: var(--brand-dark); }
 .sum-grid {
 display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px;
 }

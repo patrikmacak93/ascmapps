@@ -32,7 +32,6 @@ const statusEl = document.getElementById('status');
 
 const summarySection = document.getElementById('summarySection');
 const sumGrid = document.getElementById('sumGrid');
-const sumTotal = document.getElementById('sumTotal');
 
 const tableSection = document.getElementById('tableSection');
 const rowCountEl = document.getElementById('rowCount');
@@ -232,7 +231,6 @@ KATEGORIE.forEach((k) => { pocty[k.id] = 0; });
 allRows.forEach((r) => { pocty[kategorie(r.action_label, r.is_vyjimka)] += 1; });
 
 const total = allRows.length;
-sumTotal.textContent = `${nf0.format(total)} materiálů`;
 
 const max = Math.max(1, ...Object.values(pocty));
 
