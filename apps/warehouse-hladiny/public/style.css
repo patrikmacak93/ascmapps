@@ -178,17 +178,6 @@ width: 100%; font: inherit; font-size: 14px; padding: 9px 12px;
 border: 1px solid var(--line); border-radius: 10px; background: #fbfcfb;
 }
 .wh-search:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,137,61,.15); }
-.active-filter {
-display: inline-flex; align-items: center; gap: 8px;
-font-size: 12.5px; font-weight: 600; color: var(--brand-dark);
-background: #e7f2ea; border: 1px solid #bfe0cb;
-padding: 5px 10px 5px 12px; border-radius: 999px;
-}
-.active-filter button {
-border: none; background: none; cursor: pointer; font: inherit;
-font-size: 15px; line-height: 1; color: var(--ink-soft); padding: 0;
-}
-.active-filter button:hover { color: var(--down); }
 .row-count { font-size: 12.5px; color: var(--ink-soft); }
 
 .table-container {

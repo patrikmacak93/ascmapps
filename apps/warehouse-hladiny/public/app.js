@@ -35,7 +35,6 @@ const sumGrid = document.getElementById('sumGrid');
 const sumTotal = document.getElementById('sumTotal');
 
 const tableSection = document.getElementById('tableSection');
-const activeFilterEl = document.getElementById('activeFilter');
 const rowCountEl = document.getElementById('rowCount');
 const whBody = document.getElementById('whBody');
 const prevPage = document.getElementById('prevPage');
@@ -326,21 +325,6 @@ rowCountEl.textContent = `${nf0.format(rows.length)} ${rows.length === 1 ? 'řá
 pageInfo.textContent = `Strana ${page} / ${pages}`;
 prevPage.disabled = page <= 1;
 nextPage.disabled = page >= pages;
-
-if (actionFilter) {
-activeFilterEl.hidden = false;
-activeFilterEl.innerHTML = `Filtr: ${escapeHtml(actionFilter)} <button type="button" title="Zrušit filtr">×</button>`;
-activeFilterEl.querySelector('button').addEventListener('click', () => {
-actionFilter = null;
-delete colFilters.action_label;
-page = 1;
-renderSummary();
-renderTable();
-});
-} else {
-activeFilterEl.hidden = true;
-activeFilterEl.innerHTML = '';
-}
 
 // vizualni stav razeni v hlavicce
 document.querySelectorAll('th.sortable').forEach((th) => {
