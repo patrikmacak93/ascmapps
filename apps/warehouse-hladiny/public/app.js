@@ -676,13 +676,26 @@ renderTable();
 function initHeaderFilters() {
 document.querySelectorAll('thead th[data-key]').forEach((th) => {
 if (th.querySelector('.xl-btn')) return;
+
+// Text hlavicky zabalime do spanu, aby sel poskladat flexem vedle tlacitka.
+// (Checkbox hromadne vyjimky uz v th byt muze - ten necháme na miste.)
+const popisek = document.createElement('span');
+popisek.className = 'th-label';
+Array.from(th.childNodes).forEach((n) => {
+if (n.nodeType === 3) { popisek.appendChild(n); } // textovy uzel
+});
+th.insertBefore(popisek, th.firstChild);
+
 const btn = document.createElement('button');
 btn.type = 'button';
 btn.className = 'xl-btn';
-btn.title = 'Filtr';
-btn.innerHTML = '&#9662;';
+btn.title = 'Filtr a řazení';
+btn.setAttribute('aria-label', 'Filtr sloupce');
+btn.innerHTML =
+'<svg viewBox="0 0 16 16" aria-hidden="true">' +
+'<path d="M2 3.2h12L9.4 8.3v4.3l-2.8 1.4V8.3z" fill="currentColor"/></svg>';
 btn.addEventListener('click', (e) => {
-e.stopPropagation(); // aby klik nerozjel razeni
+e.stopPropagation();
 const key = th.getAttribute('data-key');
 if (xlKey === key) { closeXlFilter(); return; }
 openXlFilter(key, th);

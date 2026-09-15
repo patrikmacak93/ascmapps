@@ -479,18 +479,67 @@ background: #fff; color: var(--ink); text-transform: none; letter-spacing: 0;
 thead tr.filter-row th.col-exc { text-align: center; }
 #excAll { width: 17px; height: 17px; }
 
-/* ===== Excel-style filtry v hlavičce ===== */
-thead th[data-key] { position: relative; padding-right: 26px; }
-.xl-btn {
-position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
-width: 18px; height: 18px; line-height: 1; padding: 0;
-border: 1px solid transparent; border-radius: 4px;
-background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 11px;
+
+/* ===== Záhlaví tabulky s Excel-style filtry ===== */
+thead th {
+background: linear-gradient(#f7faf8, #eef3f0);
+padding: 0; height: 46px;
+border-bottom: 2px solid #d3ded7;
+vertical-align: middle;
 }
-.xl-btn:hover { background: #e7f2ea; color: var(--brand-dark); border-color: #bfe0cb; }
-thead th.has-filter { color: var(--brand-dark); }
-thead th.has-filter .xl-btn { background: var(--brand); color: #fff; border-color: var(--brand); }
-thead th.col-exc { padding-right: 26px; }
+thead th + th { border-left: 1px solid #e3eae6; }
+
+thead th[data-key] {
+display: table-cell;
+}
+thead th[data-key] > .th-inner,
+thead th[data-key] {
+position: relative;
+}
+/* obsah hlavicky: popisek + trychtyr */
+thead th[data-key] {
+padding: 0 6px 0 12px;
+white-space: nowrap;
+}
+.th-label {
+display: inline-block; vertical-align: middle;
+max-width: calc(100% - 34px); overflow: hidden; text-overflow: ellipsis;
+}
+thead th.num .th-label { text-align: right; }
+
+/* tlačítko filtru - vždy viditelné, ne jen při hoveru */
+.xl-btn {
+display: inline-flex; align-items: center; justify-content: center;
+vertical-align: middle; margin-left: 6px;
+width: 24px; height: 24px; padding: 0;
+border: 1px solid #cbd8d1; border-radius: 6px;
+background: #fff; color: #6d7d74; cursor: pointer;
+box-shadow: 0 1px 1px rgba(1,59,28,.04);
+transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.xl-btn svg { width: 13px; height: 13px; display: block; }
+.xl-btn:hover { background: #e7f2ea; color: var(--brand-dark); border-color: var(--brand); }
+.xl-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+/* sloupec s aktivním filtrem */
+thead th.has-filter { background: linear-gradient(#eaf5ee, #dcece3); color: var(--brand-darker); }
+thead th.has-filter .xl-btn {
+background: var(--brand); color: #fff; border-color: var(--brand);
+box-shadow: 0 1px 3px rgba(0,137,61,.35);
+}
+thead th.has-filter .th-label { font-weight: 800; }
+
+/* řazení: šipka za popiskem, ne za celým th */
+thead th.sortable { cursor: pointer; }
+thead th.sortable:hover .th-label { color: var(--brand); }
+thead th.sort-asc .th-label::after { content: " ▲"; font-size: 9px; color: var(--brand); }
+thead th.sort-desc .th-label::after { content: " ▼"; font-size: 9px; color: var(--brand); }
+thead th.sortable::after { content: none; }
+
+/* sloupec Výjimka: popisek + checkbox + trychtýř */
+thead th.col-exc { text-align: center; padding: 0 6px; }
+thead th.col-exc .th-label { display: block; font-size: 10.5px; line-height: 1.1; max-width: none; }
+thead th.col-exc #excAll { margin: 2px 4px 0 0; vertical-align: middle; }
 
 .xl-filter {
 position: absolute; z-index: 70; width: 248px;
