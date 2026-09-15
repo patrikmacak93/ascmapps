@@ -15,6 +15,8 @@ getMaterialDetail,
 getVyjimky,
 setVyjimka,
 setVyjimkyHromadne,
+getZdroje,
+spustVypocet,
 } = require('../controllers/warehouseHladinyController');
 
 // GET /api/v1/warehouse-hladiny/runs -> seznam behu vypoctu
@@ -37,5 +39,11 @@ router.post('/warehouse-hladiny/vyjimky', setVyjimka);
 
 // POST /api/v1/warehouse-hladiny/vyjimky/hromadne -> hromadne nastaveni
 router.post('/warehouse-hladiny/vyjimky/hromadne', setVyjimkyHromadne);
+
+// GET /api/v1/warehouse-hladiny/zdroje -> stari zdrojovych dat
+router.get('/warehouse-hladiny/zdroje', getZdroje);
+
+// POST /api/v1/warehouse-hladiny/prepocet -> spusti usp_vypocet_hladin
+router.post('/warehouse-hladiny/prepocet', spustVypocet);
 
 module.exports = router;

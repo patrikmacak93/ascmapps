@@ -6,11 +6,11 @@ exportů (.htm/.html), počká, až se dopíše na disk, rozparsuje ho a nahraje
 (DELETE + INSERT v jedné transakci, včetně času zápisu loaded_at) do příslušné
 tabulky. Podle názvu souboru se vybere parser i cílová tabulka:
 
-* FST_WH_LVL*   -> skladyHladiny.potreby
+* ASCM_REQ_W*   -> skladyHladiny.potreby
                     (18 týdnů, backlog se ignoruje)
 * NEW_HLADINY*  -> skladyHladiny.nove_hladiny
                     (materiály bez hladiny)
-* ASCM_Hladiny* -> skladyHladiny.aktualni_hladiny
+* AKT_HLADN* -> skladyHladiny.aktualni_hladiny
                     (aktuální stav, VALUE)
 
 Všechny tři soubory se zpracovávají nezávisle. Po úspěšném zápisu se soubor
@@ -84,9 +84,9 @@ MAX_LOG_LINES = 500
 # Název souboru -> (cílová tabulka, druh parseru).
 # První shoda vyhrává.
 JOB_MAP = [
-    (re.compile(r"AKT_HLADN", re.I), "potreby", "potreby"),
+    (re.compile(r"ASCM_REQ_W", re.I), "potreby", "potreby"),
     (re.compile(r"NEW_HLADINY", re.I), "nove_hladiny", "nove"),
-    (re.compile(r"ASCM_REQ_W", re.I), "aktualni_hladiny", "hladiny"),
+    (re.compile(r"AKT_HLADN", re.I), "aktualni_hladiny", "hladiny"),
 ]
 
 EXT_PATTERN = re.compile(r"\.html?$", re.I)
@@ -301,16 +301,19 @@ def parse_potreby(html):
 
     return rows, warnings
 
+HLADINY_HEADER_FIRST = ("plant", "plnt")
 
 def parse_hladiny(html):
     """
-    Plant, Material, Storage Type, VALUE, XMOVE.
+    Plnt/Plant, Material, Typ, ZFST_WM_SMT-VALUE, ZFST_WM_SMT-XMOVE.
 
-    Sloupec XMOVE se zahazuje.
+    Sloupec XMOVE se zahazuje. Report byva strankovany - hlavicka se
+    opakuje u kazde stranky a preskakuje se.
     """
     warnings = []
     rows = []
     header_found = False
+    header_count = 0
 
     for row_match in ROW_RE.finditer(html):
         cells = row_cells(row_match.group(1))
@@ -318,8 +321,9 @@ def parse_hladiny(html):
         if not cells:
             continue
 
-        if cells[0] == "Plant":
+        if cells[0].strip().lower() in HLADINY_HEADER_FIRST:
             header_found = True
+            header_count += 1
             continue
 
         if not header_found or len(cells) < 4 or not cells[1]:
@@ -336,7 +340,12 @@ def parse_hladiny(html):
 
     if not header_found:
         warnings.append(
-            'Hlavička ("Plant") nebyla nalezena – ověřte formát exportu.'
+            'Hlavička ("Plant" ani "Plnt") nebyla nalezena – ověřte formát exportu.'
+        )
+
+    if header_count > 1:
+        warnings.append(
+            f"Stránkovaný report: {header_count} opakovaných hlaviček (přeskočeno)."
         )
 
     return rows, warnings

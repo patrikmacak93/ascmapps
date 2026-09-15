@@ -145,4 +145,29 @@ chyba(res, 'POST /vyjimky/hromadne', err, 'Chyba pri hromadnem ukladani vyjimek.
 }
 });
 
+/* GET /api/zdroje - kdy naposledy dorazila zdrojova data */
+router.get('/zdroje', async (req, res) => {
+try {
+const vysledek = await volatConnector('/warehouse-hladiny/zdroje');
+res.set('Cache-Control', 'no-store');
+res.json(vysledek.data || []);
+} catch (err) {
+chyba(res, 'GET /zdroje', err, 'Chyba pri nacitani stari zdrojovych dat.');
+}
+});
+
+/* POST /api/prepocet - spusti prepocet hladin (usp_vypocet_hladin) */
+router.post('/prepocet', async (req, res) => {
+try {
+const vysledek = await volatConnector('/warehouse-hladiny/prepocet', {
+method: 'POST',
+timeoutMs: 10 * 60 * 1000, // 10 minut
+});
+res.set('Cache-Control', 'no-store');
+res.json(vysledek);
+} catch (err) {
+chyba(res, 'POST /prepocet', err, 'Prepocet hladin se nepodarilo dokoncit.');
+}
+});
+
 module.exports = router;

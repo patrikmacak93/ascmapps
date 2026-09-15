@@ -570,3 +570,38 @@ padding: 4px 6px; border-radius: 6px; cursor: pointer;
 .xl-list { max-height: 230px; overflow-y: auto; }
 .xl-actions { display: flex; gap: 8px; margin-top: 8px; }
 .xl-actions .wh-btn { flex: 1; padding: 6px 10px; font-size: 12.5px; }
+
+/* ===== Zdrojová data + přepočet ===== */
+.zdroje {
+margin-top: 14px; background: var(--surface); border: 1px solid var(--line);
+border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 18px;
+}
+.zdroje-title {
+font-size: 11px; font-weight: 700; text-transform: uppercase;
+letter-spacing: .08em; color: var(--ink-soft);
+}
+.zdroje-list {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+gap: 8px 18px; margin-top: 10px;
+}
+.zdroj {
+display: flex; align-items: center; gap: 9px;
+font-size: 13px; padding: 5px 0;
+}
+.zdroj-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.zdroj-nazev { font-weight: 600; }
+.zdroj-kdy { font-variant-numeric: tabular-nums; }
+.zdroj-pocet { margin-left: auto; font-size: 12px; color: var(--ink-soft); }
+
+.zdroj-cerstvy .zdroj-dot { background: var(--brand); }
+.zdroj-vcerejsi .zdroj-dot { background: var(--brand-lime); }
+.zdroj-stary .zdroj-dot { background: #d89b1c; }
+.zdroj-stary .zdroj-kdy { color: #9a6d0a; font-weight: 600; }
+.zdroj-chybi .zdroj-dot { background: var(--down); }
+.zdroj-chybi .zdroj-kdy { color: var(--down); font-weight: 600; }
+
+.zdroje-warn {
+grid-column: 1 / -1; margin: 6px 0 0; font-size: 12.5px;
+color: #9a6d0a; background: #fdf6e6; border: 1px solid #f0dfb4;
+border-radius: 8px; padding: 7px 10px;
+}

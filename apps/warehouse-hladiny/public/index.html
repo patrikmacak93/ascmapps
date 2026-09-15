@@ -45,6 +45,12 @@ Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 <span id="runMeta" class="run-meta"></span>
 <div class="controls-spacer"></div>
 <button type="button" id="refreshBtn" class="wh-btn">Aktualizovat</button>
+<button type="button" id="calcBtn" class="wh-btn wh-btn-primary">Provést výpočet</button>
+</div>
+
+<div id="zdrojeBox" class="zdroje" hidden>
+<span class="zdroje-title">Zdrojová data</span>
+<div id="zdrojeList" class="zdroje-list"></div>
 </div>
 
 <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -77,12 +83,12 @@ Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 <thead>
 <tr>
 <th class="sortable" data-key="material">Materiál</th>
-<th class="sortable num" data-key="current_level">Aktuální hladina</th>
-<th class="sortable num" data-key="new_level">Nová hladina</th>
-<th class="sortable num" data-key="pct_change">Rozdíl</th>
-<th class="sortable" data-key="action_label">Status</th>
+<th class="sortable num" data-key="current_level">Aktuální</th>
+<th class="sortable num" data-key="new_level">Nová</th>
+<th class="sortable num" data-key="pct_change">Změna</th>
+<th class="sortable" data-key="action_label">Důvod</th>
 <th class="sortable" data-key="storage_type">Typ skladu</th>
-<th class="col-exc" data-key="is_vyjimka" title="Vyloučit z automatické kalkulace">Neměnit hladinu <input type="checkbox" id="excAll" class="exc-box" title="Nastavit/zrušit výjimku pro celý filtrovaný výběr"></th>
+<th class="col-exc" data-key="is_vyjimka" title="Vyloučit z automatické kalkulace">Výjimka <input type="checkbox" id="excAll" class="exc-box" title="Nastavit/zrušit výjimku pro celý filtrovaný výběr"></th>
 </tr>
 </thead>
 <tbody id="whBody">

@@ -3,15 +3,15 @@ app.js - logika stranky Skladove hladiny
 
 Tok:
 1. Nacte seznam behu (/api/runs) a naplni vyber. Vybere nejnovejsi.
-2. Pro vybrany beh nacte souhrn (/api/summary) -> KPI karty + rozdeleni,
+2. Pro vybrany beh nacte souhrn (/api/summary) -> karty rozdeleni,
 a radky (/api/vypocet) -> tabulka.
 3. Klik na radek nacte detail (/api/material) a otevre "drawer" s
 VIZUALIZACI VYPOCTU: graf tydennich potreb, zvyraznene 4tydenni okno,
-kvartil Q3, prepocet na 2denni hladinu a pasmo ±20 %.
+prepocet na 2denni hladinu a rozpis vypoctu.
 
 API klic tady zamerne NENI - frontend mluvi jen s vlastnim app-backendem
 (server/routes/index.js), ten teprve prida klic a zavola sql-connector.
-Vsechno je READ-ONLY: appka nic nezapisuje, jen zobrazuje navrh.
+Appka data cte; jediny zapis je nastaveni/zruseni vyjimky.
 =========================================================================== */
 
 'use strict';
@@ -31,12 +31,10 @@ const refreshBtn = document.getElementById('refreshBtn');
 const statusEl = document.getElementById('status');
 
 const summarySection = document.getElementById('summarySection');
-
 const sumGrid = document.getElementById('sumGrid');
 const sumTotal = document.getElementById('sumTotal');
 
 const tableSection = document.getElementById('tableSection');
-
 const activeFilterEl = document.getElementById('activeFilter');
 const rowCountEl = document.getElementById('rowCount');
 const whBody = document.getElementById('whBody');
@@ -75,6 +73,13 @@ return String(v == null ? '' : v)
 
 const nf0 = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
 const nf3 = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 3 });
+
+// Desetinny format - pouziva se VYHRADNE v rozpisu vypoctu Q3, kde by
+// zaokrouhleni nahoru rozbilo aritmetiku (28 + 0,25 x 15 != 32).
+function fmtDec(v) {
+if (v == null || v === '' || Number.isNaN(Number(v))) return '—';
+return nf3.format(Number(v));
+}
 
 // Vsechna mnozstvi se zobrazuji jako cela cisla zaokrouhlena NAHORU
 // (kus navic je vzdy lepsi nez kus chybejici). Parametr dec uz nema vliv -
@@ -163,10 +168,9 @@ allRows = vypocet.data || [];
 
 renderSummary(summary);
 populateTypeFilter();
+
 // reset filtru/strankovani pri zmene behu
 actionFilter = null;
-
-
 page = 1;
 renderTable();
 
@@ -178,6 +182,7 @@ const zmeny = allRows.filter(
 ).length;
 setStatus(`Běh ${fmtDateTime(currentRunAt)} — ${allRows.length} materiálů, z toho ${zmeny} navržených změn.`, 'ok');
 runMeta.textContent = '';
+nactiZdroje();
 } catch (err) {
 setStatus(`Chyba: ${err.message}`, 'error');
 }
@@ -248,11 +253,11 @@ const rows = currentRows();
 const size = PAGE_SIZE === 'all' ? Math.max(rows.length, 1) : PAGE_SIZE;
 const pages = Math.max(1, Math.ceil(rows.length / size));
 if (page > pages) page = pages;
-const start = (page - 1) * PAGE_SIZE;
-const pageRows = rows.slice(start, start + PAGE_SIZE);
+const start = (page - 1) * size;
+const pageRows = rows.slice(start, start + size);
 
 if (!rows.length) {
-whBody.innerHTML = `<tr><td colspan="5" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
+whBody.innerHTML = `<tr><td colspan="7" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
 } else {
 whBody.innerHTML = pageRows.map((r) => {
 const kind = actionKind(r.action_label);
@@ -290,8 +295,10 @@ if (actionFilter) {
 activeFilterEl.hidden = false;
 activeFilterEl.innerHTML = `Filtr: ${escapeHtml(actionFilter)} <button type="button" title="Zrušit filtr">×</button>`;
 activeFilterEl.querySelector('button').addEventListener('click', () => {
-actionFilter = null; page = 1;
-document.querySelectorAll('.dist-row').forEach((d) => d.classList.remove('active'));
+actionFilter = null;
+delete colFilters.action_label;
+page = 1;
+if (lastSummary.length) renderSummary(lastSummary);
 renderTable();
 });
 } else {
@@ -311,7 +318,8 @@ th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
 /* ==================== DETAIL + VIZUALIZACE VYPOCTU ==================== */
 
 // Orientacni tydenni kvartil Q3 (interpolace, dle obecneho vysvetleni) -
-// slouzi POUZE k umisteni carky v grafu. Autoritativni vysledek je q3 z DB.
+// slouzi POUZE k umisteni carky v grafu a k rozpisu vypoctu.
+// Autoritativni vysledek je q3 z DB.
 function weeklyQ3(values) {
 const v = values.filter((x) => x > 0).slice().sort((a, b) => a - b);
 const n = v.length;
@@ -327,7 +335,7 @@ return v[lo] + (pos - lo) * (v[hi] - v[lo]);
 // SVG sloupcovy graf potreb se zvyraznenym oknem. Parametrizovany:
 // opts.factor - prepocet hodnot (1 = tydenni, 2/7 = 2denni ekvivalent)
 // opts.qLine - hodnota vodorovne Q3 cary (uz v jednotkach grafu), nebo null
-// opts.qSolid - true = plna cara (autoritativni q3), false = carkovana (orientacni)
+// opts.qSolid - true = plna cara (autoritativni q3), false = carkovana
 function demandChartSvg(potreby, opts) {
 opts = opts || {};
 const factor = opts.factor || 1;
@@ -360,7 +368,7 @@ bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" 
 // popisek tydne (zkraceny na cislo tydne z "cw 37/2026")
 const short = String(r.period_label || r.period_index).replace(/^cw\s*/i, '').split('/')[0];
 const cx = padL + slot * i + slot / 2;
-labels += `<text x="${cx.toFixed(1)}" y="${(baseY + 14).toFixed(1)}" text-anchor="middle" font-size="9" fill="${inWin ? 'var(--brand-dark)' : '#96a19a'}">${escapeHtml(short)}</text>`;
+labels += `<text x="${cx.toFixed(1)}" y="${(baseY + 14).toFixed(1)}" text-anchor="middle" font-size="16" fill="${inWin ? 'var(--brand-dark)' : '#96a19a'}">${escapeHtml(short)}</text>`;
 // neviditelna "hit" zona pres cely tydenni sloupec - kvuli tenkym sloupcum
 // se snadno trefi hover; nese data pro tooltip (tyden + hodnota).
 hits += `<rect class="wh-bar-hit" data-week="${escapeHtml(String(r.period_label || ('týden ' + r.period_index)))}" data-val="${val}" data-inwin="${inWin ? '1' : '0'}" x="${(padL + slot * i).toFixed(1)}" y="${padT.toFixed(1)}" width="${slot.toFixed(1)}" height="${plotH.toFixed(1)}"></rect>`;
@@ -374,7 +382,7 @@ const lastWin = idxs.reduce((acc, v, i) => (v <= winEnd && v >= WINDOW_START ? i
 if (firstWin !== -1 && lastWin >= firstWin) {
 const wx = padL + slot * firstWin + 2;
 const ww = slot * (lastWin - firstWin + 1) - 4;
-winRect = `<rect x="${wx.toFixed(1)}" y="${padT}" width="${ww.toFixed(1)}" height="${plotH}" fill="rgba(0,137,61,.07)" rx="6"></rect>`;
+winRect = `<rect x="${wx.toFixed(1)}" y="${padT}" width="${ww.toFixed(1)}" height="${plotH}" fill="rgba(0,137,61,.15)" rx="6"></rect>`;
 }
 
 // vodorovna Q3 cara (volitelna)
@@ -384,7 +392,7 @@ const qy = baseY - (qLine / maxVal) * plotH;
 const col = qSolid ? 'var(--brand-dark)' : 'var(--down)';
 const dash = qSolid ? '' : ' stroke-dasharray="5 4"';
 q3line = `<line x1="${padL}" y1="${qy.toFixed(1)}" x2="${W - padR}" y2="${qy.toFixed(1)}" stroke="${col}" stroke-width="1.6"${dash}></line>`
-+ `<text x="${(W - padR).toFixed(1)}" y="${(qy - 4).toFixed(1)}" text-anchor="end" font-size="9" font-weight="700" fill="${col}">Q3 ${escapeHtml(fmt(qLine))}</text>`;
++ `<text x="${(W - padR).toFixed(1)}" y="${(qy - 4).toFixed(1)}" text-anchor="end" font-size="16" font-weight="700" fill="${col}">Q3 ${escapeHtml(fmt(qLine))}</text>`;
 }
 
 return `<svg class="wh-demand-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graf týdenních potřeb">
@@ -397,7 +405,8 @@ ${hits}
 </svg>`;
 }
 
-// Mini pasmo ±BAND kolem aktualni hladiny + poloha q3 (proc padlo rozhodnuti).
+// Mini pasmo ±BAND kolem aktualni hladiny + poloha q3.
+// Ponechano pro pripadne znovupouziti - v detailu se aktualne nevykresluje.
 function bandBarSvg(current, q3) {
 const cur = Number(current);
 const q = Number(q3);
@@ -424,7 +433,6 @@ return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Pásmo tolerance a p
 }
 
 function stepsHtml(vp, potreby) {
-const map = new Map(potreby.map((r) => [r.period_index, Number(r.requirement_qty) || 0]));
 const winEnd = WINDOW_START + WINDOW_LEN - 1;
 const winRows = potreby
 .filter((r) => r.period_index >= WINDOW_START && r.period_index <= winEnd)
@@ -434,21 +442,48 @@ const nonZero = winRows.map((r) => Number(r.requirement_qty) || 0).filter((x) =>
 const q3w = weeklyQ3(winRows.map((r) => Number(r.requirement_qty) || 0));
 
 const li = [];
+
 li.push(`Okno <b>${WINDOW_LEN}</b> týdnů: ${escapeHtml(winLabels)}`);
+
 li.push(nonZero.length
-? `Vynecháme nulové týdny → zůstává <b>${nonZero.length}</b> hodnot: ${escapeHtml(nonZero.map((x) => fmt(x, true)).join(', '))}`
+? `Vynecháme nulové týdny a seřadíme → zůstává <b>${nonZero.length}</b> hodnot: ${escapeHtml(nonZero.map(fmtDec).join(', '))}`
 : `Ve 4týdenním okně není žádná nenulová potřeba.`);
-li.push(q3w != null
-? `Kvartil <b>Q3</b> (75 %) těchto hodnot ≈ <b>${escapeHtml(fmt(q3w, true))}</b> <span class="muted">(orientačně)</span>`
-: `Kvartil Q3 nelze spočítat (bez nenulových týdnů).`);
+
+// --- rozpis vypoctu Q3 (75. percentil) ---
+if (q3w == null) {
+li.push('Kvartil Q3 nelze spočítat (bez nenulových týdnů).');
+} else if (nonZero.length === 1) {
+li.push(`Zůstala jediná hodnota, <b>Q3 = ${escapeHtml(fmtDec(nonZero[0]))}</b>`);
+} else {
+// pozice v serazene rade a linearni interpolace mezi sousedy
+const n = nonZero.length;
+const pos = 0.75 * (n - 1);
+const lo = Math.floor(pos);
+const hi = Math.ceil(pos);
+const zbytek = pos - lo;
+
+let vypocet;
+if (lo === hi) {
+vypocet = `pozice <b>0,75 × (${n} − 1) = ${escapeHtml(fmtDec(pos))}</b> padne přesně na ${lo + 1}. hodnotu → <b>${escapeHtml(fmtDec(nonZero[lo]))}</b>`;
+} else {
+vypocet = `pozice <b>0,75 × (${n} − 1) = ${escapeHtml(fmtDec(pos))}</b> leží mezi ${lo + 1}. a ${hi + 1}. hodnotou `
++ `(${escapeHtml(fmtDec(nonZero[lo]))} a ${escapeHtml(fmtDec(nonZero[hi]))})<br>`
++ `${escapeHtml(fmtDec(nonZero[lo]))} + ${escapeHtml(fmtDec(zbytek))} × (${escapeHtml(fmtDec(nonZero[hi]))} − ${escapeHtml(fmtDec(nonZero[lo]))}) = `
++ `<b>${escapeHtml(fmtDec(q3w))}</b>`;
+}
+li.push(`Kvartil <b>Q3</b> (75. percentil): ${vypocet} <span class="muted">(orientačně)</span>`);
+}
+
 li.push(vp && vp.q3 != null
 ? `Přepočet na 2denní hladinu (× 2 ÷ 7, zaokrouhleno nahoru) → <b>q3 = ${escapeHtml(fmt(vp.q3))}</b> <span class="muted">(hodnota z DB)</span>`
 : `2denní hladina se nepočítá (viz důvod níže).`);
+
 if (vp && vp.current_level != null && Number(vp.current_level) > 0 && vp.q3 != null) {
 li.push(`Porovnání s aktuální hladinou <b>${escapeHtml(fmt(vp.current_level))}</b> a pásmem ±${Math.round(BAND * 100)} % → <b>${escapeHtml(vp.action_label)}</b>`);
 } else {
 li.push(`Rozhodnutí: <b>${escapeHtml(vp ? vp.action_label : '—')}</b>`);
 }
+
 return `<ol class="steps">${li.map((t) => `<li>${t}</li>`).join('')}</ol>`;
 }
 
@@ -461,17 +496,12 @@ try {
 const data = await apiGet(`/material?material=${encodeURIComponent(material)}&run_at=${encodeURIComponent(currentRunAt)}`);
 const vp = data.vypocet;
 const potreby = data.potreby || [];
-const q3w = weeklyQ3(
-potreby.filter((r) => r.period_index >= WINDOW_START && r.period_index <= WINDOW_START + WINDOW_LEN - 1)
-.map((r) => Number(r.requirement_qty) || 0)
-);
 
 const kind = vp ? actionKind(vp.action_label) : 'flat';
 
 const nums = `
 <div class="detail-nums">
 <div class="detail-num"><div class="n-label">Aktuální hladina</div><div class="n-value">${vp ? fmt(vp.current_level) : '—'}</div></div>
-<div class="detail-num"><div class="n-label">Q3 → 2denní</div><div class="n-value">${vp ? fmt(vp.q3) : '—'}</div></div>
 <div class="detail-num"><div class="n-label">Nová hladina</div><div class="n-value">${vp && vp.new_level != null ? fmt(vp.new_level) : '<span class="muted">nenastaveno</span>'}</div></div>
 <div class="detail-num"><div class="n-label">Změna</div><div class="n-value">${vp ? fmtPct(vp.pct_change) : '—'}</div></div>
 </div>`;
@@ -494,21 +524,13 @@ const chart = `
 <span class="lg"><span class="lg-line lg-line-solid"></span>Q3 → 2denní hladina (z DB)</span>
 </div>`;
 
-const band = vp && vp.current_level != null && Number(vp.current_level) > 0 && vp.q3 != null ? `
-<div class="detail-block-title" style="margin-top:18px">Rozhodovací pásmo ±${Math.round(BAND * 100)} %</div>
-<div class="chart-card">${bandBarSvg(vp.current_level, vp.q3)}</div>` : '';
-
 const steps = `
 <div class="detail-block-title" style="margin-top:20px">Jak hladina vznikla</div>
 ${stepsHtml(vp, potreby)}`;
 
 const meta = vp ? `<p class="note">Běh výpočtu: ${escapeHtml(fmtDateTime(vp.run_at))}${vp.approved_at ? ` · schváleno ${escapeHtml(fmtDateTime(vp.approved_at))}${vp.approved_by ? ` (${escapeHtml(vp.approved_by)})` : ''}` : ''}${vp.exported_at ? ` · exportováno ${escapeHtml(fmtDateTime(vp.exported_at))}` : ''}</p>` : '';
 
-const potrebyNote = potreby.length
-? '<p class="note">Týdenní potřeby odrážejí poslední import (tabulka se přepisuje plným refreshem), ne stav v okamžiku běhu.</p>'
-: '';
-
-drawerBody.innerHTML = nums + verdict + chart + band + steps + meta + potrebyNote;
+drawerBody.innerHTML = nums + verdict + chart + steps + meta;
 wireChartTooltip();
 } catch (err) {
 drawerBody.innerHTML = `<p class="note" style="color:var(--down)">Chyba: ${escapeHtml(err.message)}</p>`;
@@ -517,11 +539,11 @@ drawerBody.innerHTML = `<p class="note" style="color:var(--down)">Chyba: ${escap
 
 function verdictText(vp) {
 const kind = actionKind(vp.action_label);
-if (kind === 'up') return 'Nová hladina je nad pásmem tolerance – navyšujeme.';
-if (kind === 'down') return 'Nová hladina je pod pásmem tolerance – snižujeme.';
-if (kind === 'dead') return 'Bez potřeb na 18 týdnů – hladina se sráží na 0.';
+if (kind === 'up') return 'Nová hladina je větší o více než 20% – navyšujeme.';
+if (kind === 'down') return 'Nová hladina je menší o více než 20% – snižujeme.';
+if (kind === 'dead') return 'Ve výsledu 18. týdnů není žádná potřeba – hladina se sráží na 0.';
 if (kind === 'new') return 'Materiál bez dosavadní hladiny – nasazuje se spočtená hodnota.';
-return 'Rozdíl je uvnitř pásma ±20 % – hladina zůstává beze změny.';
+return 'Rozdíl není větší než ±20 % – hladina zůstává beze změny.';
 }
 
 // Napoji hover tooltip na grafy potreb (tydenni i 2denni). Pri najeti na
@@ -539,7 +561,7 @@ const val = Number(hit.getAttribute('data-val'));
 const inWin = hit.getAttribute('data-inwin') === '1';
 tip.innerHTML =
 `<span class="wh-tip-week">${escapeHtml(week)}</span>` +
-`<span class="wh-tip-row">${escapeHtml(metric)}: <b>${fmt(val, true)}</b> ks</span>` +
+`<span class="wh-tip-row">${escapeHtml(metric)}: <b>${fmt(val)}</b> ks</span>` +
 (inWin ? '<span class="wh-tip-win">ve výpočetním okně</span>' : '');
 tip.hidden = false;
 });
@@ -554,7 +576,6 @@ hit.addEventListener('mouseleave', () => { tip.hidden = true; });
 }
 
 function closeDrawer() { drawer.hidden = true; drawerBody.innerHTML = ''; }
-
 
 /* ==================== VYJIMKY z automatickeho vypoctu ====================
 Zaskrtnuty material se nepocita automaticky - hladina mu zustava na
@@ -585,8 +606,6 @@ setStatus(`Výjimku se nepodařilo uložit: ${err.message}`, 'error');
 if (box) box.disabled = false;
 }
 }
-
-
 
 /* ==================== EXCEL-STYLE FILTRY ====================
 Kazdy sloupec ma v hlavicce trychtyr. Panel nabizi razeni, hledani
@@ -626,7 +645,7 @@ const hodnoty = Array.from(new Set(rowsExcept(key).map((r) => cellText(r, key)))
 .sort((a, b) => a.localeCompare(b, 'cs', { numeric: true }));
 const sel = colFilters[key];
 
-list.innerHTML = hodnoty.map((v, i) => `
+list.innerHTML = hodnoty.map((v) => `
 <label class="xl-item"><input type="checkbox" data-v="${escapeHtml(v)}"${!sel || sel.has(v) ? ' checked' : ''}>
 <span>${escapeHtml(v === '' ? '(prázdné)' : v)}</span></label>`).join('');
 search.value = '';
@@ -677,8 +696,7 @@ function initHeaderFilters() {
 document.querySelectorAll('thead th[data-key]').forEach((th) => {
 if (th.querySelector('.xl-btn')) return;
 
-// Text hlavicky zabalime do spanu, aby sel poskladat flexem vedle tlacitka.
-// (Checkbox hromadne vyjimky uz v th byt muze - ten necháme na miste.)
+// Text hlavicky zabalime do spanu, aby sel poskladat vedle tlacitka.
 const popisek = document.createElement('span');
 popisek.className = 'th-label';
 Array.from(th.childNodes).forEach((n) => {
@@ -762,10 +780,101 @@ master.checked = rows.length > 0 && s === rows.length;
 master.indeterminate = s > 0 && s < rows.length;
 }
 
-/* ==================== typ skladu ==================== */
+/* ==================== inicializace filtru v hlavicce ==================== */
 
 function populateTypeFilter() {
 initHeaderFilters();
+}
+
+
+/* ==================== ZDROJOVA DATA + PREPOCET ====================
+Vypocet potrebuje vsechny tri reporty pohromade. Panel proto ukazuje,
+kdy naposledy kazdy z nich dorazil - at je videt, ze ceho vypocet je. */
+
+const ZDROJ_POPIS = {
+potreby: 'Týdenní potřeby',
+aktualni_hladiny: 'Aktuální hladiny',
+nove_hladiny: 'Nové materiály',
+};
+
+// Stari v hodinach -> barevny stav (dnes / vcera / starsi).
+function stariTrida(iso) {
+if (!iso) return 'zdroj-chybi';
+const hodin = (Date.now() - new Date(iso).getTime()) / 36e5;
+if (hodin < 24) return 'zdroj-cerstvy';
+if (hodin < 48) return 'zdroj-vcerejsi';
+return 'zdroj-stary';
+}
+
+function renderZdroje(zdroje) {
+const box = document.getElementById('zdrojeBox');
+const list = document.getElementById('zdrojeList');
+if (!box || !list) return;
+
+if (!zdroje || !zdroje.length) { box.hidden = true; return; }
+
+list.innerHTML = zdroje.map((z) => {
+const nazev = ZDROJ_POPIS[z.zdroj] || z.zdroj;
+const cls = stariTrida(z.loaded_at);
+const kdy = z.loaded_at ? fmtDateTime(z.loaded_at) : 'neimportováno';
+return `<div class="zdroj ${cls}">
+<span class="zdroj-dot"></span>
+<span class="zdroj-nazev">${escapeHtml(nazev)}</span>
+<span class="zdroj-kdy">${escapeHtml(kdy)}</span>
+<span class="zdroj-pocet">${nf0.format(Number(z.pocet || 0))} řádků</span>
+</div>`;
+}).join('');
+
+// Upozorneni, kdyz zdroje nejsou ze stejneho dne - vypocet by michal
+// cerstve potreby se starymi hladinami.
+const dny = new Set(zdroje.filter((z) => z.loaded_at)
+.map((z) => new Date(z.loaded_at).toDateString()));
+const chybi = zdroje.some((z) => !z.loaded_at);
+let varovani = '';
+if (chybi) varovani = 'Některý ze zdrojů zatím nebyl naimportován.';
+else if (dny.size > 1) varovani = 'Zdroje nejsou ze stejného dne — výpočet by kombinoval různě stará data.';
+list.insertAdjacentHTML('beforeend', varovani
+? `<p class="zdroje-warn">${escapeHtml(varovani)}</p>` : '');
+
+box.hidden = false;
+}
+
+async function nactiZdroje() {
+try {
+renderZdroje(await apiGet('/zdroje'));
+} catch (err) {
+// stari dat je jen doplnkova informace - chyba nesmi shodit stranku
+console.warn('Stáří zdrojových dat se nepodařilo načíst:', err.message);
+}
+}
+
+async function spustPrepocet(btn) {
+if (!window.confirm(
+'Spustit přepočet hladin?\n\n' +
+'Přepíše se stávající návrh pro všechny materiály. ' +
+'Výpočet může trvat několik minut.')) return;
+
+const puvodni = btn.textContent;
+btn.disabled = true;
+btn.textContent = 'Počítám…';
+setStatus('Probíhá přepočet hladin, může to trvat několik minut…', 'loading');
+
+try {
+const res = await fetch(`${API_BASE}/prepocet`, { method: 'POST' });
+const body = await res.json().catch(() => ({}));
+if (!res.ok) throw new Error(body.error || `Server odpověděl chybou ${res.status}.`);
+
+renderZdroje(body.zdroje);
+setStatus(`Přepočet hotov: ${nf0.format(Number(body.pocet_celkem || 0))} materiálů (${fmtDateTime(body.run_at)}). Načítám výsledek…`, 'ok');
+
+// znovu nacist seznam behu, at se vybere ten novy
+await init();
+} catch (err) {
+setStatus(`Přepočet se nepodařilo dokončit: ${err.message}`, 'error');
+} finally {
+btn.disabled = false;
+btn.textContent = puvodni;
+}
 }
 
 /* ==================== NAPOVEDA k vypoctu ==================== */
@@ -833,8 +942,8 @@ function buildExportXls(rows) {
 const body = rows.map((r) => {
 const typ = String(r.storage_type || '').trim();
 const mat = String(r.material || '').trim().toUpperCase();
-// Vyjimka = materiál se nepočítá automaticky, exportuje se
-// s aktuální hladinou; ostatní s průměrnou týdenní potřebou.
+// Vyjimka = material se nepocita automaticky, exportuje se
+// s aktualni hladinou; ostatni s prumernou tydenni potrebou.
 const avg = r.is_vyjimka
 ? Math.ceil(Number(r.current_level) || 0)
 : (r.avg_weekly == null ? 0 : Math.ceil(Number(r.avg_weekly)));
@@ -872,7 +981,6 @@ setStatus(`Vyexportováno ${nf0.format(rows.length)} řádků.`, 'ok');
 
 runSelect.addEventListener('change', () => loadRun(runSelect.value));
 refreshBtn.addEventListener('click', () => loadRun(currentRunAt || runSelect.value));
-
 
 document.querySelectorAll('th.sortable').forEach((th) => {
 th.addEventListener('click', () => {
@@ -947,6 +1055,9 @@ if (pageSel) pageSel.addEventListener('change', () => {
 PAGE_SIZE = pageSel.value === 'all' ? 'all' : Number(pageSel.value);
 page = 1; renderTable();
 });
+
+const calcBtn = document.getElementById('calcBtn');
+if (calcBtn) calcBtn.addEventListener('click', () => spustPrepocet(calcBtn));
 
 const helpBtn = document.getElementById('helpBtn');
 if (helpBtn) helpBtn.addEventListener('click', () => {

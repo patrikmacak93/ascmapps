@@ -17,7 +17,7 @@ Vyzaduje Node.js 18+ (kvuli vestavenemu fetch).
 
 const { SQL_CONNECTOR_URL, SQL_CONNECTOR_API_KEY } = require('../config');
 
-async function volatConnector(cesta, { method = 'GET', query, body } = {}) {
+async function volatConnector(cesta, { method = 'GET', query, body, timeoutMs } = {}) {
 let url = `${SQL_CONNECTOR_URL}${cesta}`;
 
 if (query) {

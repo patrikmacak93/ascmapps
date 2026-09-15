@@ -23,6 +23,9 @@ const SCHEMA = '[FSTASCM].[skladyHladiny]';
 const T_VYPOCET = `${SCHEMA}.[vypocet_hladin]`;
 const T_POTREBY = `${SCHEMA}.[potreby]`;
 const T_VYJIMKY = `${SCHEMA}.[vyjimky]`;
+const T_POTREBY_SRC = `${SCHEMA}.[potreby]`;
+const T_AKT = `${SCHEMA}.[aktualni_hladiny]`;
+const T_NOVE = `${SCHEMA}.[nove_hladiny]`;
 
 // Spolecny SELECT sloupcu z vypocet_hladin, at je vsude stejne poradi.
 const VYPOCET_COLS = `
@@ -300,12 +303,67 @@ res.status(200).json({ zpracovano, zapnuto });
 } catch (err) { next(err); }
 }
 
+/* ===========================================================================
+GET /api/v1/warehouse-hladiny/zdroje
+---------------------------------------------------------------------------
+Kdy naposledy dorazila data do kazdeho ze tri zdrojovych reportu.
+Frontend podle toho ukazuje, ze ceho je vypocet postaveny.
+=========================================================================== */
+async function getZdroje(req, res, next) {
+try {
+const pool = await poolPromise;
+const result = await pool.request().query(`
+SELECT 'potreby' AS zdroj, MAX(loaded_at) AS loaded_at, COUNT(*) AS pocet FROM ${T_POTREBY_SRC}
+UNION ALL
+SELECT 'aktualni_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_AKT}
+UNION ALL
+SELECT 'nove_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_NOVE};`);
+res.status(200).json({ data: result.recordset });
+} catch (err) { next(err); }
+}
+
+/* ===========================================================================
+POST /api/v1/warehouse-hladiny/prepocet
+---------------------------------------------------------------------------
+Spusti usp_vypocet_hladin a vrati novy run_at + stari zdrojovych dat.
+Procedura bezi nad tisici materialu, proto vlastni (delsi) timeout.
+=========================================================================== */
+async function spustVypocet(req, res, next) {
+try {
+const pool = await poolPromise;
+
+const rq = pool.request();
+rq.timeout = 10 * 60 * 1000; // 10 minut, default poolu by nestacil
+await rq.execute(`${SCHEMA}.[usp_vypocet_hladin]`);
+
+const po = await pool.request().query(`
+SELECT MAX(run_at) AS run_at, COUNT(*) AS pocet_celkem
+FROM ${T_VYPOCET}
+WHERE run_at = (SELECT MAX(run_at) FROM ${T_VYPOCET});`);
+
+const zdroje = await pool.request().query(`
+SELECT 'potreby' AS zdroj, MAX(loaded_at) AS loaded_at, COUNT(*) AS pocet FROM ${T_POTREBY_SRC}
+UNION ALL
+SELECT 'aktualni_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_AKT}
+UNION ALL
+SELECT 'nove_hladiny', MAX(loaded_at), COUNT(*) FROM ${T_NOVE};`);
+
+res.status(200).json({
+run_at: po.recordset[0] ? po.recordset[0].run_at : null,
+pocet_celkem: po.recordset[0] ? po.recordset[0].pocet_celkem : 0,
+zdroje: zdroje.recordset,
+});
+} catch (err) { next(err); }
+}
+
 module.exports = {
 getRuns,
 getVypocet,
 getVyjimky,
 setVyjimka,
 setVyjimkyHromadne,
+getZdroje,
+spustVypocet,
 getSummary,
 getMaterialDetail,
 };
