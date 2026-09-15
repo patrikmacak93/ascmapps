@@ -629,3 +629,38 @@ border: 1px solid #f0dfb4; border-radius: 6px; padding: 1px 7px;
 
 /* badge pro výjimky - odlišit od mrtvých materiálů */
 .badge-exc { background: var(--brand-lime); color: #1d2b12; }
+
+/* ===== Hlavička běhu (bez dropdownu) ===== */
+.run-info { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.run-when {
+font-size: 18px; font-weight: 700; color: var(--ink);
+font-variant-numeric: tabular-nums;
+}
+.run-info .run-label {
+font-size: 11px; font-weight: 700; text-transform: uppercase;
+letter-spacing: .08em; color: var(--brand);
+}
+.run-meta { font-size: 13px; color: var(--ink-soft); }
+
+/* ===== Pevné šířky sloupců =====
+Bez table-layout: fixed si prohlížeč počítá šířky z obsahu, takže se
+při filtrování i řazení pokaždé přeskládají. Fixed layout je odvodí
+jen z prvního řádku (hlavičky) podle hodnot níže. */
+#whTable { table-layout: fixed; min-width: 900px; }
+
+#whTable thead th:nth-child(1) { width: 20%; } /* Materiál */
+#whTable thead th:nth-child(2) { width: 11%; } /* Aktuální */
+#whTable thead th:nth-child(3) { width: 11%; } /* Nová */
+#whTable thead th:nth-child(4) { width: 10%; } /* Změna */
+#whTable thead th:nth-child(5) { width: 27%; } /* Důvod */
+#whTable thead th:nth-child(6) { width: 13%; } /* Typ skladu */
+#whTable thead th:nth-child(7) { width: 8%; } /* Výjimka */
+
+/* dlouhé hodnoty raději zkrátit než rozhodit rozvržení */
+#whTable tbody td {
+overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#whTable tbody td .badge {
+max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+vertical-align: middle;
+}

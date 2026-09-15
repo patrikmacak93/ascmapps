@@ -40,9 +40,11 @@ Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 
 <!-- ovladaci listva: vyber behu + stav + aktualizace -->
 <div class="controls">
-<label class="run-label" for="runSelect">Běh výpočtu</label>
-<select id="runSelect" class="run-select" aria-label="Běh výpočtu"></select>
+<div class="run-info">
+<span class="run-label">Výpočet z</span>
+<span id="runWhen" class="run-when">—</span>
 <span id="runMeta" class="run-meta"></span>
+</div>
 <div class="controls-spacer"></div>
 <button type="button" id="refreshBtn" class="wh-btn">Aktualizovat</button>
 <button type="button" id="calcBtn" class="wh-btn wh-btn-primary">Provést výpočet</button>

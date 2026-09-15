@@ -25,7 +25,7 @@ const BAND = Number.isFinite(CFG.BAND) ? CFG.BAND : 0.2;
 let PAGE_SIZE = 50;
 
 // --- prvky DOM ---
-const runSelect = document.getElementById('runSelect');
+const runWhen = document.getElementById('runWhen');
 const runMeta = document.getElementById('runMeta');
 const refreshBtn = document.getElementById('refreshBtn');
 const statusEl = document.getElementById('status');
@@ -131,17 +131,17 @@ return body;
 /* ============================ nacitani ============================ */
 
 async function init() {
-setStatus('Načítám běhy…', 'loading');
+setStatus('Načítám výpočet…', 'loading');
 try {
 const runs = await apiGet('/runs');
 if (!runs.length) {
-setStatus('Zatím není žádný běh výpočtu. Spusť proceduru usp_vypocet_hladin.', 'empty');
+if (runWhen) runWhen.textContent = 'zatím neproběhl';
+setStatus('Zatím neproběhl žádný výpočet. Spusť ho tlačítkem „Provést výpočet".', 'empty');
+nactiZdroje();
 return;
 }
-runSelect.innerHTML = runs.map((r) => {
-const zmeny = r.pocet_zmen != null ? `, ${r.pocet_zmen} změn` : '';
-return `<option value="${escapeHtml(r.run_at)}">${escapeHtml(fmtDateTime(r.run_at))} · ${escapeHtml(String(r.pocet_celkem))} mat.${escapeHtml(zmeny)}</option>`;
-}).join('');
+// Vysledky se nearchivuji - procedura tabulku pokazde prepise,
+// takze beh je vzdy prave jeden.
 currentRunAt = runs[0].run_at;
 await loadRun(currentRunAt);
 } catch (err) {
@@ -177,7 +177,8 @@ const zmeny = allRows.filter(
 (r) => r.new_level != null && (r.current_level == null || Number(r.new_level) !== Number(r.current_level))
 ).length;
 setStatus(`Běh ${fmtDateTime(currentRunAt)} — ${allRows.length} materiálů, z toho ${zmeny} navržených změn.`, 'ok');
-runMeta.textContent = '';
+if (runWhen) runWhen.textContent = fmtDateTime(currentRunAt);
+if (runMeta) runMeta.textContent = `${nf0.format(allRows.length)} materiálů · ${nf0.format(zmeny)} změn`;
 nactiZdroje();
 } catch (err) {
 setStatus(`Chyba: ${err.message}`, 'error');
@@ -754,10 +755,19 @@ all.indeterminate = zaskrtnuto > 0 && zaskrtnuto < boxes.length;
 
 function applyXlFilter() {
 if (!xlKey) return;
-const boxes = [...document.querySelectorAll('#xlList .xl-item input')];
-const vybrane = boxes.filter((b) => b.checked).map((b) => b.getAttribute('data-v'));
+const items = [...document.querySelectorAll('#xlList .xl-item')];
+const hledani = (document.getElementById('xlSearch').value || '').trim();
 
-if (vybrane.length === boxes.length) delete colFilters[xlKey]; // vse = bez filtru
+// Kdyz uzivatel neco vyhledal, bere se to jako vyber: OK odfiltruje
+// prave na to, co je videt (jinak by zustalo vse zaskrtnute a filtr
+// by neudelal nic).
+const zdrojove = hledani ? items.filter((it) => !it.hidden) : items;
+const vybrane = zdrojove
+.filter((it) => it.querySelector('input').checked)
+.map((it) => it.querySelector('input').getAttribute('data-v'));
+
+if (!vybrane.length) { setStatus('Filtr: nevybrána žádná hodnota.', 'empty'); return; }
+if (!hledani && vybrane.length === items.length) delete colFilters[xlKey]; // vse = bez filtru
 else colFilters[xlKey] = new Set(vybrane);
 
 if (xlKey === 'action_label') {
@@ -935,8 +945,13 @@ renderZdroje(z);
 const t = document.getElementById('zdrojeRun');
 if (t) t.textContent = z && z.run_at ? `Výpočet z ${fmtDateTime(z.run_at)}` : '';
 } catch (err) {
-// stari dat je jen doplnkova informace - chyba nesmi shodit stranku
-console.warn('Stáří zdrojových dat se nepodařilo načíst:', err.message);
+// Nejcastejsi duvod: jeste nebyl spusten 06_vypocet_meta.sql.
+const box = document.getElementById('zdrojeBox');
+const list = document.getElementById('zdrojeList');
+if (box && list) {
+list.innerHTML = `<p class="zdroje-warn">Stáří zdrojových dat se nepodařilo načíst: ${escapeHtml(err.message)}</p>`;
+box.hidden = false;
+}
 }
 }
 
@@ -1071,8 +1086,8 @@ setStatus(`Vyexportováno ${nf0.format(rows.length)} řádků.`, 'ok');
 
 /* ============================ udalosti ============================ */
 
-runSelect.addEventListener('change', () => loadRun(runSelect.value));
-refreshBtn.addEventListener('click', () => loadRun(currentRunAt || runSelect.value));
+
+refreshBtn.addEventListener('click', () => init());
 
 document.querySelectorAll('th.sortable').forEach((th) => {
 th.addEventListener('click', () => {
@@ -1097,6 +1112,10 @@ if (excAll) excAll.addEventListener('click', (e) => e.stopPropagation());
 
 // --- panel excelovskeho filtru ---
 const xlSearch = document.getElementById('xlSearch');
+// Enter = rovnou aplikovat (typicky "napisu cislo materialu a chci ho videt")
+if (xlSearch) xlSearch.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') { e.preventDefault(); applyXlFilter(); }
+});
 if (xlSearch) xlSearch.addEventListener('input', () => {
 const t = xlSearch.value.trim().toLowerCase();
 document.querySelectorAll('#xlList .xl-item').forEach((it) => {
