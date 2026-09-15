@@ -77,19 +77,12 @@ Vyber běh, projdi materiály a v detailu si zobraz, jak hladina vznikla.</p>
 <thead>
 <tr>
 <th class="sortable" data-key="material">Materiál</th>
-<th class="sortable num" data-key="current_level">Aktuální</th>
-<th class="sortable num" data-key="new_level">Nová</th>
-<th class="sortable num" data-key="pct_change">Změna</th>
-<th class="sortable" data-key="action_label">Důvod</th>
+<th class="sortable num" data-key="current_level">Aktuální hladina</th>
+<th class="sortable num" data-key="new_level">Nová hladina</th>
+<th class="sortable num" data-key="pct_change">Rozdíl</th>
+<th class="sortable" data-key="action_label">Status</th>
 <th class="sortable" data-key="storage_type">Typ skladu</th>
-<th class="col-exc" title="Vyloučit z automatické kalkulace">Výjimka</th>
-</tr>
-<tr class="filter-row">
-<th><input type="search" id="fMaterial" class="th-filter" placeholder="hledat…" aria-label="Filtr materiálu"></th>
-<th></th><th></th><th></th>
-<th><select id="fDuvod" class="th-filter" aria-label="Filtr důvodu"><option value="">vše</option></select></th>
-<th><select id="fTyp" class="th-filter" aria-label="Filtr typu skladu"><option value="">vše</option></select></th>
-<th class="col-exc"><input type="checkbox" id="excAll" class="exc-box" title="Nastavit/zrušit výjimku pro celý filtrovaný výběr"></th>
+<th class="col-exc" data-key="is_vyjimka" title="Vyloučit z automatické kalkulace">Neměnit hladinu <input type="checkbox" id="excAll" class="exc-box" title="Nastavit/zrušit výjimku pro celý filtrovaný výběr"></th>
 </tr>
 </thead>
 <tbody id="whBody">
@@ -164,6 +157,20 @@ aria-label="Zavřít detail">&times;</button>
 <button type="button" id="exportRun" class="wh-btn wh-btn-primary">Stáhnout</button>
 </div>
 </div>
+</div>
+</div>
+
+<div id="xlFilter" class="xl-filter" hidden>
+<div class="xl-sort">
+<button type="button" class="xl-sort-btn" data-dir="asc">Seřadit vzestupně</button>
+<button type="button" class="xl-sort-btn" data-dir="desc">Seřadit sestupně</button>
+</div>
+<input type="search" id="xlSearch" class="xl-search" placeholder="Hledat…" aria-label="Hledat v hodnotách">
+<label class="xl-all-row"><input type="checkbox" id="xlAll"> <span>(Vybrat vše)</span></label>
+<div id="xlList" class="xl-list"></div>
+<div class="xl-actions">
+<button type="button" id="xlClear" class="wh-btn">Zrušit filtr</button>
+<button type="button" id="xlOk" class="wh-btn wh-btn-primary">OK</button>
 </div>
 </div>
 

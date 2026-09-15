@@ -478,3 +478,46 @@ background: #fff; color: var(--ink); text-transform: none; letter-spacing: 0;
 .th-filter:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px rgba(0,137,61,.15); }
 thead tr.filter-row th.col-exc { text-align: center; }
 #excAll { width: 17px; height: 17px; }
+
+/* ===== Excel-style filtry v hlavičce ===== */
+thead th[data-key] { position: relative; padding-right: 26px; }
+.xl-btn {
+position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+width: 18px; height: 18px; line-height: 1; padding: 0;
+border: 1px solid transparent; border-radius: 4px;
+background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 11px;
+}
+.xl-btn:hover { background: #e7f2ea; color: var(--brand-dark); border-color: #bfe0cb; }
+thead th.has-filter { color: var(--brand-dark); }
+thead th.has-filter .xl-btn { background: var(--brand); color: #fff; border-color: var(--brand); }
+thead th.col-exc { padding-right: 26px; }
+
+.xl-filter {
+position: absolute; z-index: 70; width: 248px;
+background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+box-shadow: 0 14px 38px rgba(1,59,28,.22); padding: 8px;
+font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: 0;
+}
+.xl-filter[hidden] { display: none; }
+.xl-sort { display: flex; flex-direction: column; border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 6px; }
+.xl-sort-btn {
+font: inherit; font-size: 12.5px; text-align: left; padding: 6px 8px;
+border: none; background: none; cursor: pointer; border-radius: 6px; color: var(--ink);
+}
+.xl-sort-btn:hover { background: #f0f6f2; color: var(--brand-dark); }
+.xl-search {
+width: 100%; font: inherit; font-size: 12.5px; padding: 6px 9px;
+border: 1px solid var(--line); border-radius: 7px; margin-bottom: 6px;
+}
+.xl-search:focus { outline: none; border-color: var(--brand); }
+.xl-all-row, .xl-item {
+display: flex; align-items: center; gap: 7px;
+padding: 4px 6px; border-radius: 6px; cursor: pointer;
+}
+.xl-all-row { font-weight: 600; border-bottom: 1px solid var(--line); margin-bottom: 4px; padding-bottom: 6px; }
+.xl-item:hover { background: #f3f6f4; }
+.xl-item[hidden] { display: none; }
+.xl-item span, .xl-all-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xl-list { max-height: 230px; overflow-y: auto; }
+.xl-actions { display: flex; gap: 8px; margin-top: 8px; }
+.xl-actions .wh-btn { flex: 1; padding: 6px 10px; font-size: 12.5px; }

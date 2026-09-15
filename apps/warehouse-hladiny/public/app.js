@@ -58,9 +58,10 @@ let currentRunAt = '';
 let allRows = [];
 let sortKey = 'action_label';
 let sortDir = 1; // 1 = asc, -1 = desc
-let searchTerm = '';
-let actionFilter = null;
-let typeFilter = '';
+
+let actionFilter = null; // drzi se kvuli propojeni s kartami souhrnu
+let colFilters = {}; // { key: Set(zobrazenych hodnot) } - prazdne = bez filtru
+let xlKey = null; // sloupec, jehoz filtr je prave otevreny
 let lastSummary = [];
 let page = 1;
 
@@ -164,7 +165,7 @@ renderSummary(summary);
 populateTypeFilter();
 // reset filtru/strankovani pri zmene behu
 actionFilter = null;
-searchTerm = '';
+
 
 page = 1;
 renderTable();
@@ -213,8 +214,8 @@ btn.addEventListener('click', () => {
 const label = btn.getAttribute('data-label');
 actionFilter = actionFilter === label ? null : label;
 page = 1;
-const fd = document.getElementById('fDuvod');
-if (fd) fd.value = actionFilter || '';
+if (actionFilter) colFilters.action_label = new Set([actionFilter]);
+else delete colFilters.action_label;
 renderSummary(lastSummary);
 renderTable();
 });
@@ -224,14 +225,12 @@ renderTable();
 /* ============================ tabulka ============================ */
 
 function currentRows() {
-let rows = allRows;
-if (actionFilter) rows = rows.filter((r) => r.action_label === actionFilter);
-if (typeFilter) rows = rows.filter((r) => String(r.storage_type || '') === typeFilter);
-if (searchTerm) {
-const t = searchTerm.toLowerCase();
-rows = rows.filter((r) => String(r.material || '').toLowerCase().includes(t));
-}
-const numeric = new Set(['current_level', 'q3', 'new_level', 'pct_change']);
+let rows = allRows.filter((r) => FILTER_COLS.every((k) => {
+const sel = colFilters[k];
+return !sel || sel.has(cellText(r, k));
+}));
+
+const numeric = new Set(['current_level', 'new_level', 'pct_change']);
 rows = rows.slice().sort((a, b) => {
 let va = a[sortKey], vb = b[sortKey];
 if (numeric.has(sortKey)) {
@@ -239,7 +238,7 @@ va = va == null ? -Infinity : Number(va);
 vb = vb == null ? -Infinity : Number(vb);
 return (va - vb) * sortDir;
 }
-return String(va == null ? '' : va).localeCompare(String(vb == null ? '' : vb), 'cs') * sortDir;
+return String(va == null ? '' : va).localeCompare(String(vb == null ? '' : vb), 'cs', { numeric: true }) * sortDir;
 });
 return rows;
 }
@@ -281,6 +280,7 @@ box.addEventListener('change', () => ulozVyjimku(box.getAttribute('data-material
 }
 
 syncMaster();
+markActiveFilters();
 rowCountEl.textContent = `${nf0.format(rows.length)} ${rows.length === 1 ? 'řádek' : rows.length >= 2 && rows.length <= 4 ? 'řádky' : 'řádků'}`;
 pageInfo.textContent = `Strana ${page} / ${pages}`;
 prevPage.disabled = page <= 1;
@@ -587,6 +587,116 @@ if (box) box.disabled = false;
 }
 
 
+
+/* ==================== EXCEL-STYLE FILTRY ====================
+Kazdy sloupec ma v hlavicce trychtyr. Panel nabizi razeni, hledani
+a zaskrtavaci seznam hodnot - stejne jako v Excelu. Filtruje se podle
+hodnoty, kterou uzivatel VIDI v bunce (ne podle syrove hodnoty z DB). */
+
+const FILTER_COLS = ['material', 'current_level', 'new_level', 'pct_change',
+'action_label', 'storage_type', 'is_vyjimka'];
+
+// Text bunky pro dany sloupec - musi sedet s tim, co vykresluje renderTable.
+function cellText(r, key) {
+if (key === 'pct_change') return fmtPct(r.pct_change);
+if (key === 'is_vyjimka') return r.is_vyjimka ? 'Ano' : 'Ne';
+if (key === 'storage_type') return String(r.storage_type || '—');
+if (key === 'current_level' || key === 'new_level') {
+return r[key] == null ? '—' : fmt(r[key]);
+}
+return String(r[key] == null ? '' : r[key]);
+}
+
+// Radky po aplikaci vsech filtru KROME jednoho (Excel takto plni nabidku).
+function rowsExcept(skipKey) {
+return allRows.filter((r) => FILTER_COLS.every((k) => {
+if (k === skipKey) return true;
+const sel = colFilters[k];
+return !sel || sel.has(cellText(r, k));
+}));
+}
+
+function openXlFilter(key, th) {
+xlKey = key;
+const panel = document.getElementById('xlFilter');
+const list = document.getElementById('xlList');
+const search = document.getElementById('xlSearch');
+
+const hodnoty = Array.from(new Set(rowsExcept(key).map((r) => cellText(r, key))))
+.sort((a, b) => a.localeCompare(b, 'cs', { numeric: true }));
+const sel = colFilters[key];
+
+list.innerHTML = hodnoty.map((v, i) => `
+<label class="xl-item"><input type="checkbox" data-v="${escapeHtml(v)}"${!sel || sel.has(v) ? ' checked' : ''}>
+<span>${escapeHtml(v === '' ? '(prázdné)' : v)}</span></label>`).join('');
+search.value = '';
+syncXlAll();
+
+// umisteni pod hlavicku sloupce
+const box = th.getBoundingClientRect();
+panel.hidden = false;
+const w = panel.offsetWidth || 240;
+panel.style.left = Math.max(8, Math.min(box.left, window.innerWidth - w - 8)) + 'px';
+panel.style.top = (box.bottom + window.scrollY + 2) + 'px';
+}
+
+function closeXlFilter() {
+const panel = document.getElementById('xlFilter');
+if (panel) panel.hidden = true;
+xlKey = null;
+}
+
+function syncXlAll() {
+const all = document.getElementById('xlAll');
+const boxes = [...document.querySelectorAll('#xlList .xl-item input')];
+const zaskrtnuto = boxes.filter((b) => b.checked).length;
+all.checked = boxes.length > 0 && zaskrtnuto === boxes.length;
+all.indeterminate = zaskrtnuto > 0 && zaskrtnuto < boxes.length;
+}
+
+function applyXlFilter() {
+if (!xlKey) return;
+const boxes = [...document.querySelectorAll('#xlList .xl-item input')];
+const vybrane = boxes.filter((b) => b.checked).map((b) => b.getAttribute('data-v'));
+
+if (vybrane.length === boxes.length) delete colFilters[xlKey]; // vse = bez filtru
+else colFilters[xlKey] = new Set(vybrane);
+
+if (xlKey === 'action_label') {
+const f = colFilters.action_label;
+actionFilter = (f && f.size === 1) ? Array.from(f)[0] : null;
+if (lastSummary.length) renderSummary(lastSummary);
+}
+page = 1;
+closeXlFilter();
+renderTable();
+}
+
+// Trychtyre do hlavicky + oznaceni aktivnich filtru.
+function initHeaderFilters() {
+document.querySelectorAll('thead th[data-key]').forEach((th) => {
+if (th.querySelector('.xl-btn')) return;
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.className = 'xl-btn';
+btn.title = 'Filtr';
+btn.innerHTML = '&#9662;';
+btn.addEventListener('click', (e) => {
+e.stopPropagation(); // aby klik nerozjel razeni
+const key = th.getAttribute('data-key');
+if (xlKey === key) { closeXlFilter(); return; }
+openXlFilter(key, th);
+});
+th.appendChild(btn);
+});
+}
+
+function markActiveFilters() {
+document.querySelectorAll('thead th[data-key]').forEach((th) => {
+th.classList.toggle('has-filter', !!colFilters[th.getAttribute('data-key')]);
+});
+}
+
 /* ==================== HROMADNA vyjimka ====================
 Checkbox v hlavicce sloupce Vyjimka aplikuje zmenu na CELY aktualne
 filtrovany vyber (ne jen na zobrazenou stranku). Pred zapisem se ptame
@@ -642,24 +752,7 @@ master.indeterminate = s > 0 && s < rows.length;
 /* ==================== typ skladu ==================== */
 
 function populateTypeFilter() {
-const fTyp = document.getElementById('fTyp');
-const fDuvod = document.getElementById('fDuvod');
-if (fTyp) {
-const types = Array.from(new Set(allRows.map((r) => String(r.storage_type || '').trim()).filter(Boolean)))
-.sort((a, b) => a.localeCompare(b, 'cs'));
-const keep = typeFilter;
-fTyp.innerHTML = '<option value="">vše</option>' +
-types.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-if (keep && types.includes(keep)) fTyp.value = keep; else typeFilter = '';
-}
-if (fDuvod) {
-const labels = Array.from(new Set(allRows.map((r) => r.action_label).filter(Boolean)))
-.sort((a, b) => a.localeCompare(b, 'cs'));
-const keep = actionFilter;
-fDuvod.innerHTML = '<option value="">vše</option>' +
-labels.map((l) => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-if (keep && labels.includes(keep)) fDuvod.value = keep; else actionFilter = null;
-}
+initHeaderFilters();
 }
 
 /* ==================== NAPOVEDA k vypoctu ==================== */
@@ -701,13 +794,21 @@ D = vzdy 0
 Generujeme SpreadsheetML 2003 (.xls): otevre se v Excelu a na rozdil
 od CSV umi vynutit textovy format, takze vedouci nula nezmizi. */
 
-function exportRows(scope) {
-let rows = allRows;
-if (actionFilter) rows = rows.filter((r) => r.action_label === actionFilter);
-if (scope === 'current' && typeFilter) {
-rows = rows.filter((r) => String(r.storage_type || '') === typeFilter);
+// Aktivni typ skladu = ve filtru sloupce je vybrana prave jedna hodnota.
+function aktivniTyp() {
+const f = colFilters.storage_type;
+return (f && f.size === 1) ? Array.from(f)[0] : '';
 }
-return rows;
+
+function exportRows(scope) {
+// "current" = presne to, co ma uzivatel odfiltrovane v tabulce
+if (scope === 'current') return currentRows();
+// "all" = vsechny typy skladu, ostatni filtry ale respektujeme
+return allRows.filter((r) => FILTER_COLS.every((k) => {
+if (k === 'storage_type') return true;
+const sel = colFilters[k];
+return !sel || sel.has(cellText(r, k));
+}));
 }
 
 function xmlEsc(v) {
@@ -743,7 +844,8 @@ const rows = exportRows(scope);
 if (!rows.length) { setStatus('Export: žádné řádky neodpovídají výběru.', 'empty'); return; }
 const blob = new Blob(['\ufeff' + buildExportXls(rows)], { type: 'application/vnd.ms-excel;charset=utf-8' });
 const stamp = (currentRunAt || '').replace(/[^0-9]/g, '').slice(0, 8);
-const suffix = scope === 'current' && typeFilter ? '_typ' + typeFilter : '_vse';
+const t = aktivniTyp();
+const suffix = scope === 'current' && t ? '_typ' + t : '_vse';
 const a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
 a.download = `hladiny_export_${stamp}${suffix}.xls`;
@@ -776,21 +878,56 @@ drawerClose.addEventListener('click', closeDrawer);
 drawerBackdrop.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !drawer.hidden) closeDrawer(); });
 
-const fMaterial = document.getElementById('fMaterial');
-if (fMaterial) fMaterial.addEventListener('input', () => { searchTerm = fMaterial.value.trim(); page = 1; renderTable(); });
-
-const fTyp = document.getElementById('fTyp');
-if (fTyp) fTyp.addEventListener('change', () => { typeFilter = fTyp.value; page = 1; renderTable(); });
-
-const fDuvod = document.getElementById('fDuvod');
-if (fDuvod) fDuvod.addEventListener('change', () => {
-actionFilter = fDuvod.value || null; page = 1;
-if (lastSummary.length) renderSummary(lastSummary);
-renderTable();
-});
-
 const excAll = document.getElementById('excAll');
 if (excAll) excAll.addEventListener('change', () => hromadnaVyjimka(excAll.checked, excAll));
+if (excAll) excAll.addEventListener('click', (e) => e.stopPropagation());
+
+// --- panel excelovskeho filtru ---
+const xlSearch = document.getElementById('xlSearch');
+if (xlSearch) xlSearch.addEventListener('input', () => {
+const t = xlSearch.value.trim().toLowerCase();
+document.querySelectorAll('#xlList .xl-item').forEach((it) => {
+it.hidden = t && !it.textContent.toLowerCase().includes(t);
+});
+});
+
+const xlAll = document.getElementById('xlAll');
+if (xlAll) xlAll.addEventListener('change', () => {
+document.querySelectorAll('#xlList .xl-item').forEach((it) => {
+if (!it.hidden) it.querySelector('input').checked = xlAll.checked;
+});
+syncXlAll();
+});
+
+const xlList = document.getElementById('xlList');
+if (xlList) xlList.addEventListener('change', syncXlAll);
+
+const xlOk = document.getElementById('xlOk');
+if (xlOk) xlOk.addEventListener('click', applyXlFilter);
+
+const xlClear = document.getElementById('xlClear');
+if (xlClear) xlClear.addEventListener('click', () => {
+if (xlKey) {
+delete colFilters[xlKey];
+if (xlKey === 'action_label') { actionFilter = null; if (lastSummary.length) renderSummary(lastSummary); }
+}
+page = 1; closeXlFilter(); renderTable();
+});
+
+document.querySelectorAll('.xl-sort-btn').forEach((b) => {
+b.addEventListener('click', () => {
+if (!xlKey) return;
+sortKey = xlKey; sortDir = b.getAttribute('data-dir') === 'asc' ? 1 : -1;
+page = 1; closeXlFilter(); renderTable();
+});
+});
+
+// klik mimo panel ho zavre
+document.addEventListener('click', (e) => {
+const panel = document.getElementById('xlFilter');
+if (!panel || panel.hidden) return;
+if (!panel.contains(e.target) && !e.target.closest('.xl-btn')) closeXlFilter();
+});
 
 const pageSel = document.getElementById('pageSize');
 if (pageSel) pageSel.addEventListener('change', () => {
@@ -809,11 +946,12 @@ if (exportBtn) exportBtn.addEventListener('click', () => {
 const cur = document.getElementById('expCurrentInfo');
 const all = document.getElementById('expAllInfo');
 const curRadio = document.querySelector('input[name="expScope"][value="current"]');
-if (typeFilter) {
-cur.textContent = `typ ${typeFilter} · ${nf0.format(exportRows('current').length)} řádků`;
+const t = aktivniTyp();
+if (t || Object.keys(colFilters).length) {
+cur.textContent = `${t ? 'typ ' + t + ' · ' : ''}${nf0.format(exportRows('current').length)} řádků`;
 curRadio.disabled = false; curRadio.checked = true;
 } else {
-cur.textContent = 've filtru není vybraný žádný typ skladu';
+cur.textContent = 'v tabulce není nastavený žádný filtr';
 curRadio.disabled = true;
 document.querySelector('input[name="expScope"][value="all"]').checked = true;
 }
