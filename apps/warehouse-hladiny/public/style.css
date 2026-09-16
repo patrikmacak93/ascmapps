@@ -634,13 +634,15 @@ při filtrování i řazení pokaždé přeskládají. Fixed layout je odvodí
 jen z prvního řádku (hlavičky) podle hodnot níže. */
 #whTable { table-layout: fixed; min-width: 900px; }
 
-#whTable thead th:nth-child(1) { width: 20%; } /* Materiál */
-#whTable thead th:nth-child(2) { width: 11%; } /* Aktuální */
-#whTable thead th:nth-child(3) { width: 11%; } /* Nová */
-#whTable thead th:nth-child(4) { width: 10%; } /* Změna */
-#whTable thead th:nth-child(5) { width: 27%; } /* Důvod */
-#whTable thead th:nth-child(6) { width: 13%; } /* Typ skladu */
-#whTable thead th:nth-child(7) { width: 8%; } /* Výjimka */
+#whTable thead th:nth-child(1) { width: 9%; } /* Materiál */
+#whTable thead th:nth-child(2) { width: 24%; } /* Popis */
+#whTable thead th:nth-child(3) { width: 9%; } /* Profit Ctr */
+#whTable thead th:nth-child(4) { width: 9%; } /* Aktuální */
+#whTable thead th:nth-child(5) { width: 9%; } /* Nová */
+#whTable thead th:nth-child(6) { width: 8%; } /* Změna */
+#whTable thead th:nth-child(7) { width: 16%; } /* Důvod */
+#whTable thead th:nth-child(8) { width: 10%; } /* Typ skladu */
+#whTable thead th:nth-child(9) { width: 6%; } /* Výjimka */
 
 /* dlouhé hodnoty raději zkrátit než rozhodit rozvržení */
 #whTable tbody td {
