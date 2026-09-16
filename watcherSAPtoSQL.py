@@ -668,10 +668,22 @@ def hladiny_row_cells(row_html):
     ]
 
 
+# Sloupce hlavičky, které nejsou týdenní a nejsou součástí klíče.
+HLADINY_POTREBY_IGNORED_HEADERS = {"backlog"}
+
+HLADINY_POTREBY_ATTR_HEADERS = {
+    "descr.": "descr",
+    "descr": "descr",
+    "profit ctr": "profit_ctr",
+    "profit ctr.": "profit_ctr",
+}
+
+
 def hladiny_parse_potreby(html):
     warnings = []
     rows = []
     week_columns = None
+    attr_columns = {}
 
     for row_match in HLADINY_ROW_RE.finditer(html):
         cells = hladiny_row_cells(row_match.group(1))
@@ -681,9 +693,21 @@ def hladiny_parse_potreby(html):
 
         if cells[0] == "Material":
             week_columns = []
+            attr_columns = {}
 
             for index, header in enumerate(cells):
-                if index in (0, 1):
+                if index == 0:
+                    continue
+
+                header_key = header.strip().lower()
+
+                if header_key in HLADINY_POTREBY_IGNORED_HEADERS:
+                    continue
+
+                if header_key in HLADINY_POTREBY_ATTR_HEADERS:
+                    attr_columns[
+                        HLADINY_POTREBY_ATTR_HEADERS[header_key]
+                    ] = index
                     continue
 
                 match = HLADINY_WEEK_RE.match(header)
@@ -712,6 +736,17 @@ def hladiny_parse_potreby(html):
         if not material:
             continue
 
+        def attr_value(name):
+            index = attr_columns.get(name)
+
+            if index is None or index >= len(cells):
+                return None
+
+            return cells[index] or None
+
+        descr = attr_value("descr")
+        profit_ctr = attr_value("profit_ctr")
+
         for period_index, (column_index, label) in enumerate(
             week_columns
         ):
@@ -731,6 +766,8 @@ def hladiny_parse_potreby(html):
                     "requirement_qty": (
                         0 if quantity is None else quantity
                     ),
+                    "descr": descr,
+                    "profit_ctr": profit_ctr,
                 }
             )
 
@@ -839,6 +876,8 @@ HLADINY_COLUMNS = {
         "period_index",
         "period_label",
         "requirement_qty",
+        "descr",
+        "profit_ctr",
     ],
     "aktualni_hladiny": [
         "material",
@@ -1149,8 +1188,7 @@ def receipts_load_rows_to_sql(engine, table_name, rows, log):
         pd.to_numeric(
             dataframe["requirement_qty"],
             errors="coerce",
-        )
-        .fillna(0)
+        ).fillna(0)
     )
 
     dataframe["mod_pn"] = dataframe["local_material"].map(

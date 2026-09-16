@@ -245,7 +245,7 @@ return `<button type="button" class="sum-card${active}" data-kat="${k.id}" style
 </span>
 <span class="sum-card-label">${escapeHtml(k.nazev)}</span>
 <span class="sum-card-desc">${escapeHtml(k.popis)}</span>
-<span class="sum-card-track"><span class="sum-card-fill" style="width:${ptc}%"></span></span>
+<span class="sum-card-track"><span class="sum-card-fill" style="width:${(pocet / max) * 100}%"></span></span>
 </button>`;
 }).join('');
 
@@ -294,13 +294,15 @@ const start = (page - 1) * size;
 const pageRows = rows.slice(start, start + size);
 
 if (!rows.length) {
-whBody.innerHTML = `<tr><td colspan="7" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
+whBody.innerHTML = `<tr><td colspan="9" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
 } else {
 whBody.innerHTML = pageRows.map((r) => {
 const kind = actionKind(r.action_label, r.is_vyjimka);
 const pctCls = r.pct_change > 0 ? 'pct-up' : r.pct_change < 0 ? 'pct-down' : 'muted';
 return `<tr data-material="${escapeHtml(r.material)}">
 <td class="mat-cell">${escapeHtml(r.material)}</td>
+<td class="muted">${escapeHtml(r.descr || '—')}</td>
+<td class="muted">${escapeHtml(r.profit_ctr || '—')}</td>
 <td class="num">${fmt(r.current_level)}</td>
 <td class="num">${r.new_level == null ? '<span class="muted">—</span>' : fmt(r.new_level)}</td>
 <td class="num ${pctCls}">${fmtPct(r.pct_change)}</td>
@@ -678,7 +680,7 @@ Kazdy sloupec ma v hlavicce trychtyr. Panel nabizi razeni, hledani
 a zaskrtavaci seznam hodnot - stejne jako v Excelu. Filtruje se podle
 hodnoty, kterou uzivatel VIDI v bunce (ne podle syrove hodnoty z DB). */
 
-const FILTER_COLS = ['material', 'current_level', 'new_level', 'pct_change',
+const FILTER_COLS = ['material', 'descr', 'profit_ctr', 'current_level', 'new_level', 'pct_change',
 'action_label', 'storage_type', 'is_vyjimka'];
 
 // Text bunky pro dany sloupec - musi sedet s tim, co vykresluje renderTable.
@@ -692,6 +694,8 @@ return k ? k.nazev : String(r.action_label || '');
 if (key === 'pct_change') return fmtPct(r.pct_change);
 if (key === 'is_vyjimka') return r.is_vyjimka ? 'Ano' : 'Ne';
 if (key === 'storage_type') return String(r.storage_type || '—');
+if (key === 'descr') return String(r.descr || '—');
+if (key === 'profit_ctr') return String(r.profit_ctr || '—');
 if (key === 'current_level' || key === 'new_level') {
 return r[key] == null ? '—' : fmt(r[key]);
 }
