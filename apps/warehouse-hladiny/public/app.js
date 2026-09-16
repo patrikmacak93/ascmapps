@@ -245,7 +245,7 @@ return `<button type="button" class="sum-card${active}" data-kat="${k.id}" style
 </span>
 <span class="sum-card-label">${escapeHtml(k.nazev)}</span>
 <span class="sum-card-desc">${escapeHtml(k.popis)}</span>
-<span class="sum-card-track"><span class="sum-card-fill" style="width:${(pocet / max) * 100}%"></span></span>
+<span class="sum-card-track"><span class="sum-card-fill" style="width:${ptc}%"></span></span>
 </button>`;
 }).join('');
 
