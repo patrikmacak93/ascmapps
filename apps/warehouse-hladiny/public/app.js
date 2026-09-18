@@ -232,8 +232,6 @@ allRows.forEach((r) => { pocty[kategorie(r.action_label, r.is_vyjimka)] += 1; })
 
 const total = allRows.length;
 
-const max = Math.max(1, ...Object.values(pocty));
-
 sumGrid.innerHTML = KATEGORIE.map((k) => {
 const pocet = pocty[k.id];
 const pct = total ? (pocet / total) * 100 : 0;
@@ -245,7 +243,7 @@ return `<button type="button" class="sum-card${active}" data-kat="${k.id}" style
 </span>
 <span class="sum-card-label">${escapeHtml(k.nazev)}</span>
 <span class="sum-card-desc">${escapeHtml(k.popis)}</span>
-<span class="sum-card-track"><span class="sum-card-fill" style="width:${(pocet / max) * 100}%"></span></span>
+<span class="sum-card-track"><span class="sum-card-fill" style="width:${pct}%"></span></span>
 </button>`;
 }).join('');
 
@@ -1026,14 +1024,11 @@ return (f && f.size === 1) ? Array.from(f)[0] : '';
 }
 
 function exportRows(scope) {
-// "current" = presne to, co ma uzivatel odfiltrovane v tabulce
+// "current" = presne to, co ma uzivatel odfiltrovane v tabulce (VSECHNY
+// aktivni filtry + kategorie z KPI karty, ne jen typ skladu)
 if (scope === 'current') return currentRows();
-// "all" = vsechny typy skladu, ostatni filtry ale respektujeme
-return allRows.filter((r) => FILTER_COLS.every((k) => {
-if (k === 'storage_type') return true;
-const sel = colFilters[k];
-return !sel || sel.has(cellText(r, k));
-}));
+// "all" = uplne vsechna data bez ohledu na jakykoli aktivni filtr
+return allRows.slice();
 }
 
 function xmlEsc(v) {
@@ -1070,7 +1065,7 @@ if (!rows.length) { setStatus('Export: žádné řádky neodpovídají výběru.
 const blob = new Blob(['\ufeff' + buildExportXls(rows)], { type: 'application/vnd.ms-excel;charset=utf-8' });
 const stamp = (currentRunAt || '').replace(/[^0-9]/g, '').slice(0, 8);
 const t = aktivniTyp();
-const suffix = scope === 'current' && t ? '_typ' + t : '_vse';
+const suffix = scope === 'current' ? (t ? '_typ' + t : '_filtr') : '_vse';
 const a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
 a.download = `hladiny_export_${stamp}${suffix}.xls`;
@@ -1177,9 +1172,9 @@ if (exportBtn) exportBtn.addEventListener('click', () => {
 const cur = document.getElementById('expCurrentInfo');
 const all = document.getElementById('expAllInfo');
 const curRadio = document.querySelector('input[name="expScope"][value="current"]');
-const t = aktivniTyp();
-if (t || Object.keys(colFilters).length) {
-cur.textContent = `${t ? 'typ ' + t + ' · ' : ''}${nf0.format(exportRows('current').length)} řádků`;
+const maFiltr = Object.keys(colFilters).length > 0 || !!katFilter;
+if (maFiltr) {
+cur.textContent = `${nf0.format(exportRows('current').length)} řádků`;
 curRadio.disabled = false; curRadio.checked = true;
 } else {
 cur.textContent = 'v tabulce není nastavený žádný filtr';
