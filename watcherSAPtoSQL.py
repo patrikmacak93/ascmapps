@@ -674,6 +674,7 @@ HLADINY_POTREBY_IGNORED_HEADERS = {"backlog"}
 HLADINY_POTREBY_ATTR_HEADERS = {
     "descr.": "descr",
     "descr": "descr",
+    "mtyp": "material_type",
     "profit ctr": "profit_ctr",
     "profit ctr.": "profit_ctr",
 }
@@ -745,6 +746,7 @@ def hladiny_parse_potreby(html):
             return cells[index] or None
 
         descr = attr_value("descr")
+        material_type = attr_value("material_type")
         profit_ctr = attr_value("profit_ctr")
 
         for period_index, (column_index, label) in enumerate(
@@ -767,6 +769,7 @@ def hladiny_parse_potreby(html):
                         0 if quantity is None else quantity
                     ),
                     "descr": descr,
+                    "material_type": material_type,
                     "profit_ctr": profit_ctr,
                 }
             )
@@ -877,6 +880,7 @@ HLADINY_COLUMNS = {
         "period_label",
         "requirement_qty",
         "descr",
+        "material_type",
         "profit_ctr",
     ],
     "aktualni_hladiny": [

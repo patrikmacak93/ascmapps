@@ -294,7 +294,7 @@ const start = (page - 1) * size;
 const pageRows = rows.slice(start, start + size);
 
 if (!rows.length) {
-whBody.innerHTML = `<tr><td colspan="9" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
+whBody.innerHTML = `<tr><td colspan="10" class="wh-message">Žádné řádky neodpovídají filtru.</td></tr>`;
 } else {
 whBody.innerHTML = pageRows.map((r) => {
 const kind = actionKind(r.action_label, r.is_vyjimka);
@@ -302,6 +302,7 @@ const pctCls = r.pct_change > 0 ? 'pct-up' : r.pct_change < 0 ? 'pct-down' : 'mu
 return `<tr data-material="${escapeHtml(r.material)}">
 <td class="mat-cell">${escapeHtml(r.material)}</td>
 <td class="muted">${escapeHtml(r.descr || '—')}</td>
+<td class="muted">${escapeHtml(r.material_type || '—')}</td>
 <td class="muted">${escapeHtml(r.profit_ctr || '—')}</td>
 <td class="num">${fmt(r.current_level)}</td>
 <td class="num">${r.new_level == null ? '<span class="muted">—</span>' : fmt(r.new_level)}</td>
@@ -680,7 +681,7 @@ Kazdy sloupec ma v hlavicce trychtyr. Panel nabizi razeni, hledani
 a zaskrtavaci seznam hodnot - stejne jako v Excelu. Filtruje se podle
 hodnoty, kterou uzivatel VIDI v bunce (ne podle syrove hodnoty z DB). */
 
-const FILTER_COLS = ['material', 'descr', 'profit_ctr', 'current_level', 'new_level', 'pct_change',
+const FILTER_COLS = ['material', 'descr', 'material_type', 'profit_ctr', 'current_level', 'new_level', 'pct_change',
 'action_label', 'storage_type', 'is_vyjimka'];
 
 // Text bunky pro dany sloupec - musi sedet s tim, co vykresluje renderTable.
@@ -695,6 +696,7 @@ if (key === 'pct_change') return fmtPct(r.pct_change);
 if (key === 'is_vyjimka') return r.is_vyjimka ? 'Ano' : 'Ne';
 if (key === 'storage_type') return String(r.storage_type || '—');
 if (key === 'descr') return String(r.descr || '—');
+if (key === 'material_type') return String(r.material_type || '—');
 if (key === 'profit_ctr') return String(r.profit_ctr || '—');
 if (key === 'current_level' || key === 'new_level') {
 return r[key] == null ? '—' : fmt(r[key]);
