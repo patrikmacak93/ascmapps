@@ -1008,6 +1008,11 @@ RECEIPTS_REC_W_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+RECEIPTS_HRU_REC_W_PATTERN = re.compile(
+    r"ASCM_HRU_REC_W",
+    re.IGNORECASE,
+)
+
 RECEIPTS_REC_M_PATTERN = re.compile(
     r"ASCM_FST_REC_M",
     re.IGNORECASE,
@@ -1500,6 +1505,18 @@ def build_jobs(engine):
             ),
         ),
         (
+            "receipts_hru_rec_w",
+            "ASCM_HRU_REC_W_WATCH_DIR",
+            "RECEIPTS_WATCH_DIR",
+            RECEIPTS_HRU_REC_W_PATTERN,
+            "HRU_DCO_week",
+            "receipts_hru_rec_w_watch",
+            (
+                "Hledám soubory odpovídající: "
+                "*ASCM_HRU_REC_W*.htm(l)"
+            ),
+        ),
+        (
             "receipts_rec_m",
             "ASCM_FST_REC_M_WATCH_DIR",
             "RECEIPTS_WATCH_DIR",
@@ -1663,7 +1680,8 @@ def main():
             "vzoru "
             "(pnzListSAP / ASCM_FST_AKT_HLD / "
             "ASCM_FST_NW_HLD / ASCM_FST_REQ_W / "
-            "ASCM_FST_REC_W / ASCM_FST_REC_M)."
+            "ASCM_FST_REC_W / ASCM_HRU_REC_W / "
+            "ASCM_FST_REC_M)."
         )
 
         sys.exit(1)
