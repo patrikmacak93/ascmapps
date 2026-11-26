@@ -52,6 +52,7 @@ const projectsRoutes = require('./routes/projects');
 const emptiesRoutes = require('./routes/empties');
 const budgetRoutes = require('./routes/budget');
 const agvListRoutes = require('./routes/agvList');
+const agvUtilizationRoutes = require('./routes/agvUtilization');
 const outboundPnzRoutes = require('./routes/outboundPnz');
 const warehouseHladinyRoutes = require('./routes/warehouseHladiny')
 const authRoutes = require('./routes/auth');
@@ -65,6 +66,7 @@ app.use('/api/v1', budgetRoutes);
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', pckDatabaseRoutes);
 app.use('/api/v1', agvListRoutes);
+app.use('/api/v1', agvUtilizationRoutes);
 app.use('/api/v1', outboundPnzRoutes);
 app.use('/api/v1', warehouseHladinyRoutes);
 
@@ -81,6 +83,6 @@ app.use(errorHandler);
 const PORT = config.PORT;
 
 app.listen(PORT, () => {
-  logger.info(`Connector běží na http://localhost:${PORT}`);
+logger.info(`Connector běží na http://localhost:${PORT}`);
 });
 

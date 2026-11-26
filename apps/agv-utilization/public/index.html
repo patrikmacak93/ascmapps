@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>AGV Utilization – SCM</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+<div class="wrap">
+<div class="wordmark">Schaeffler Frenštát pod Radhoštěm<small>Supply&nbsp;Chain</small></div>
+<div class="topbar-spacer"></div>
+<div class="topbar-meta">Interní portál</div>
+</div>
+</header>
+
+<div class="page-head">
+<div class="wrap page-head-row">
+<div>
+<a href="/" class="back-link">
+<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M9.5 3L5 8l4.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+Domů
+</a>
+<h1>AGV Utilization</h1>
+<p>Využití vozíků, rozpad stavů a monitor přepravních úkolů po dnech a směnách.</p>
+</div>
+<div class="data-status" id="dataStatus" aria-live="polite">Načítám…</div>
+</div>
+</div>
+
+<!-- filtry -->
+<section class="filters" aria-label="Filtry">
+<div class="wrap filters-row">
+<div class="f-group">
+<span class="f-label">Období</span>
+<div class="f-dates">
+<input type="date" id="dateFrom" aria-label="Datum od">
+<span class="f-dash">–</span>
+<input type="date" id="dateTo" aria-label="Datum do">
+</div>
+<div class="seg seg-quick" id="quickRange">
+<button type="button" data-range="day">Poslední den</button>
+<button type="button" data-range="7">7 dní</button>
+<button type="button" data-range="30">30 dní</button>
+<button type="button" data-range="month">Měsíc</button>
+</div>
+</div>
+
+<div class="f-group">
+<span class="f-label">Směna</span>
+<div class="seg" id="shiftSeg" role="radiogroup" aria-label="Směna"></div>
+</div>
+
+<div class="f-group" id="crewGroup">
+<span class="f-label">Číslo směny</span>
+<div class="seg" id="crewChips" role="group" aria-label="Číslo směny"></div>
+</div>
+
+<div class="f-group f-grow">
+<span class="f-label">AGV</span>
+<div class="chips" id="vehicleChips" role="group" aria-label="Výběr AGV"></div>
+</div>
+</div>
+</section>
+
+<main class="wrap">
+<div id="errorBox" class="error-box" hidden></div>
+<div id="planNote" class="info-box" hidden></div>
+
+<!-- KPI -->
+<section class="kpis" id="kpis" aria-label="Ukazatele"></section>
+
+<!-- koláč + úkoly po dnech -->
+<section class="grid-2">
+<article class="card">
+<header class="card-head">
+<h2>Rozpad stavů</h2>
+<span class="card-sub" id="pieSub"></span>
+</header>
+<div class="pie-wrap">
+<div id="pieChart" class="pie-chart"></div>
+<ul id="pieLegend" class="legend-list"></ul>
+</div>
+</article>
+
+<article class="card">
+<header class="card-head">
+<h2>Úkoly po dnech</h2>
+<span class="card-sub">podle směny</span>
+</header>
+<div id="ordersByDay" class="chart"></div>
+</article>
+</section>
+
+<!-- úkoly po hodinách + poruchy -->
+<section class="grid-2">
+<article class="card">
+<header class="card-head">
+<h2>Úkoly po hodinách</h2>
+<span class="card-sub">hodina vytvoření úkolu, součet za období</span>
+</header>
+<div id="ordersByHour" class="chart"></div>
+</article>
+
+<article class="card">
+<header class="card-head">
+<h2>Utilizace a poruchy po dnech</h2>
+<span class="card-sub">utilizace v %, poruchy v minutách</span>
+</header>
+<div id="utilByDay" class="chart"></div>
+</article>
+</section>
+
+<!-- srovnání vozíků -->
+<section class="card">
+<header class="card-head card-head-tools">
+<div>
+<h2>Srovnání</h2>
+<span class="card-sub">za vybrané období a filtry</span>
+</div>
+<div class="seg seg-small" id="compareSeg" role="radiogroup" aria-label="Srovnat podle">
+<button type="button" role="radio" data-by="vehicle" aria-checked="true">Po vozících</button>
+<button type="button" role="radio" data-by="crew" aria-checked="false">Po číslech směn</button>
+<button type="button" role="radio" data-by="shift" aria-checked="false">Ranní / Noční</button>
+</div>
+</header>
+<div class="table-scroll">
+<table class="tbl" id="vehicleTable"></table>
+</div>
+</section>
+
+<!-- monitor úkolů -->
+<section class="card" id="monitor">
+<header class="card-head card-head-tools">
+<div>
+<h2>Monitor úkolů</h2>
+<span class="card-sub" id="ordersInfo"></span>
+</div>
+<div class="tools">
+<div class="seg seg-small" id="stateSeg" role="radiogroup" aria-label="Stav úkolu"></div>
+<input type="search" id="orderSearch" placeholder="Hledat (místo, ID, AGV)…" aria-label="Hledat v úkolech">
+<button type="button" class="btn" id="exportCsv">Export CSV</button>
+</div>
+</header>
+<div class="table-scroll">
+<table class="tbl tbl-orders" id="ordersTable"></table>
+</div>
+<nav class="pager" aria-label="Stránkování">
+<button type="button" class="btn" id="prevPage">&laquo; Předchozí</button>
+<span id="pageInfo"></span>
+<button type="button" class="btn" id="nextPage">Další &raquo;</button>
+</nav>
+</section>
+</main>
+
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+<footer>
+<div class="wrap">
+<span>SCM Reporting · interní použití</span>
+<span id="year"></span>
+</div>
+</footer>
+
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
