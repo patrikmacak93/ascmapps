@@ -700,7 +700,7 @@ const lines = [cols.concat('state').join(';')];
 for (const o of list) {
 lines.push(cols.map((c) => cell(c === 'shift' ? (SHIFTS[o.shift] || {}).label : o[c])).concat(orderState(o)).join(';'));
 }
-const blob = new Blob(['' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
 const a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
 a.download = `agv_ukoly_${state.from}_${state.to}${state.shift ? '_' + state.shift : ''}${state.crews.size ? '_smena' + sortedCrews().join('-') : ''}.csv`;
